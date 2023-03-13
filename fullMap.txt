@@ -1,0 +1,128 @@
+48
+77
+Atlanta
+Chicago
+San Francisco
+Montreal
+Washington
+New York
+London
+Madrid
+Essen
+Paris
+Milan
+St. Petersburg
+Los Angeles
+Mexico City
+Lima
+Santiago
+Miami
+Bogota
+Buenos Aires
+Sao Paulo
+Lagos
+Kinshasa
+Khartoum
+Johannesburg
+Algiers
+Istanbul
+Cairo
+Moscow
+Baghdad
+Riyadh
+Tehran
+Karachi
+Mumbai
+Delhi
+Kolkata
+Chennai
+Bangkok
+Jakarta
+Beijing
+Shanghai
+Hong Kong
+Ho Chi Minh City
+Seoul
+Taipei
+Manila
+Sydney
+Tokyo
+Osaka
+Atlanta;Washington
+Atlanta;Chicago
+Atlanta;Mexico City
+Atlanta;Miami
+Chicago;Montreal
+Chicago;San Francisco
+San Francisco;Tokyo
+San Francisco;Manila
+Montreal;New York
+Montreal;Washington
+Washington;New York
+New York;London
+London;Madrid
+London;Paris
+Madrid;Paris
+Madrid;Sao Paulo
+Madrid;Algiers
+Paris;Essen
+Paris;Algiers
+Essen;Milan
+Essen;St. Petersburg
+St. Petersburg;Istanbul
+St. Petersburg;Moscow
+Mexico City;Los Angeles
+Mexico City;Lima
+Mexico City;Miami
+Los Angeles;San Francisco
+Los Angeles;Sydney
+Lima;Santiago
+Lima;Bogota
+Bogota;Miami
+Bogota;Buenos Aires
+Bogota;Sao Paulo
+Buenos Aires;Sao Paulo
+Sao Paulo;Lagos
+Lagos;Kinshasa
+Lagos;Khartoum
+Kinshasa;Johannesburg
+Khartoum;Johannesburg
+Algiers;Istanbul
+Algiers;Cairo
+Istanbul;Cairo
+Istanbul;Baghdad
+Cairo;Khartoum
+Cairo;Riyadh
+Moscow;Tehran
+Baghdad;Riyadh
+Baghdad;Karachi
+Tehran;Delhi
+Karachi;Mumbai
+Karachi;Delhi
+Delhi;Mumbai
+Delhi;Chennai
+Delhi;Kolkata
+Chennai;Kolkata
+Chennai;Bangkok
+Chennai;Jakarta
+Kolkata;Hong Kong
+Kolkata;Bangkok
+Bangkok;Hong Kong
+Bangkok;Ho Chi Minh City
+Bangkok;Jakarta
+Beijing;Shanghai
+Beijing;Seoul
+Shanghai;Seoul
+Shanghai;Tokyo
+Shanghai;Taipei
+Shanghai;Hong Kong
+Hong Kong;Taipei
+Hong Kong;Manila
+Hong Kong;Ho Chi Minh City
+Ho Chi Minh City;Manila
+Seoul;Tokyo
+Taipei;Osaka
+Taipei;Manila
+Manila;Sydney
+Tokyo;Osaka
+
