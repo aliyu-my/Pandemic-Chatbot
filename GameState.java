@@ -7,8 +7,7 @@ import java.util.Random;
 
 public class GameState {
 	//class variables on top
-	private Scanner shellInput;    //These two are for the shell scanner.
-	private boolean shellOpen = false;
+	private Scanner shellInput = new Scanner(System.in);
 	//Note use a seed (1) for debugging.  
 	private Random randomGenerator = new Random(1);
 	private int numberCities = -1;	
@@ -18,11 +17,16 @@ public class GameState {
 	private int[][] connections; //The connections via offset in the cities array.
 	private int[] userLocation = {0,0};  //These are the users' location that can change.
 	private int currentUser = 0;
+	private Card[] playerCards;	//List of all Player cards
+	private int[] infectionCards;	 //List of all Infection cards
+	private Card[] playerDeck;
+	private int[] infectionDeck;
 
 	//##Change this to your path.##
 	public static final String cityMapFileName= "fullMap.txt";
 	public static final int NUMBER_USERS = 2;
 	public static final String[] userNames = {"Al","Bob"};
+	static final String[] diseaseColors = {"Blue", "Yellow", "Red", "Black"};
 
 
 	//The constants for the commands.
@@ -36,7 +40,47 @@ public class GameState {
 	public static final int PRINT_DISEASES = 7;
 	public static final int REMOVE = 8;
 	
-		
+	GameState () {
+		readCityGraph();
+		addPlayerAndInfectionCards();
+		setPlayerAndInfectionDeck();
+		infectCities();
+	}
+
+	static int[] shuffleIntArray(int[] array) {
+		int index;
+		Random random = new Random();
+		for (int i = array.length - 1; i > 0; i--)
+		{
+			index = random.nextInt(i + 1);
+			if (index != i)
+			{
+					array[index] ^= array[i];
+					array[i] ^= array[index];
+					array[index] ^= array[i];
+			}
+		}
+		return array;
+	}
+
+	static Card[] shuffleCards(Card[] array) {
+		int index;
+		Random random = new Random();
+		for (int i = array.length - 1; i > 0; i--)
+		{
+			index = random.nextInt(i + 1);
+			if (index != i)
+			{
+				Card temp = array[i];
+				array[i] = array[index];
+				array[index] = temp;
+					// array[index] ^= array[i];
+					// array[i] ^= array[index];
+					// array[index] ^= array[i];
+			}
+		}
+		return array;
+	}
 	//Print out the cities adjacent to the userLocation
 	void printAdjacentCities () {
 		for (int cityNumber = 0; cityNumber < numberCities; cityNumber++) {
@@ -165,6 +209,26 @@ public class GameState {
 			connections[1][connectionNumber] = secondCityOffset;
 		}
 	}		
+
+	void addPlayerAndInfectionCards () {
+		playerCards = new Card[numberCities];
+		infectionCards = new int[numberCities];
+		int colorCount = 0;
+		for (int cityNumber = 0; cityNumber < numberCities; cityNumber++) {
+			playerCards[cityNumber] = new Card(cityNumber, diseaseColors[colorCount]);
+			infectionCards[cityNumber] = colorCount;
+			colorCount++;
+			if (colorCount >= diseaseColors.length) {
+				colorCount = 0;
+			}
+		}
+	}
+
+	// For now, we set it directly after some shuffling
+	void setPlayerAndInfectionDeck () {
+		playerDeck = shuffleCards(playerCards);
+		infectionDeck = shuffleIntArray(infectionCards);
+	}
 	
 	//Print out the full list of connections.
 	void printConnections( ) {
@@ -176,6 +240,13 @@ public class GameState {
 		}
 	}
 			
+	//Print out the full list of connections.
+	void printPlayerCards( ) {
+		for (int card = 0; card < playerCards.length; card ++) {
+			System.out.println(cities[playerCards[card].city] +": "+ playerCards[card].color);
+		}
+	}
+
 	//Open the city file, allocate the space for the cities, and connections, then read the 
 	//cities, and then read the connections.  It uses those class variables.
 	void readCityGraph() {
