@@ -17,9 +17,6 @@ public class pandemic {
 	//class variables on top
 	private static Scanner shellInput;    //These two are for the shell scanner.
 	private static boolean shellOpen = false;
-	private static int[] diseaseCubes; //Number of disease cubes in the associated city.
-	private static int[] userLocation = {0,0};  //These are the users' location that can change.
-	private static int currentUser = 0;
 
 	//The constants for the commands.
 	private static final int QUIT = 0;
@@ -31,9 +28,11 @@ public class pandemic {
 	private static final int PRINT_ADJACENT_CITIES = 6;
 	private static final int PRINT_DISEASES = 7;
 	private static final int REMOVE = 8;
-	public static final int PRINT_PLAYER_CARDS = 9;
+	public static final int PRINT_CITY_CARDS = 9;
+	public static final int PRINT_MY_CARDS = 9;
 	
-	static GameState state;
+	static GameState state; // Will keep track of the Game's State
+	
 	/***Functions for user commands***/
 	//Get the users input and translate it to the constants.  Could do lots more 
 	//error handling here.
@@ -54,8 +53,10 @@ public class pandemic {
 			return MOVE;
 		else if (inputString.compareTo("remove") == 0)
 			return REMOVE;
-		else if (inputString.compareTo("player_cards") == 0)
-			return PRINT_PLAYER_CARDS;
+		else if (inputString.compareTo("city_cards") == 0)
+			return PRINT_CITY_CARDS;
+		else if (inputString.compareTo("my_cards") == 0)
+			return PRINT_MY_CARDS;
 		else if ((inputString.compareTo("actions") == 0) ||
 				 (inputString.compareTo("help") == 0))
 			return PRINT_ACTIONS;
@@ -106,7 +107,9 @@ public class pandemic {
 		System.out.println ("move");
 		System.out.println ("remove");		
 		System.out.println ("player_cards");		
+		System.out.println ("my_cards");		
 		System.out.println ("actions");
+		System.out.println("");
 	}
 
 	//Handle the user's commands.
@@ -127,41 +130,28 @@ public class pandemic {
 			state.printInfectedCities();
 		else if (userInput == PRINT_ACTIONS)
 			printActions();
-		else if (userInput == PRINT_PLAYER_CARDS)
-			state.printPlayerCards();
+		else if (userInput == PRINT_CITY_CARDS)
+			state.printCityCards();
+		else if (userInput == PRINT_MY_CARDS)
+			state.printCityCards();
 		else if (userInput == MOVE) {
 			state.moveUser();
 			state.actionDone();
 		}
 		else if (userInput == REMOVE) {
-			if (removeCube()) state.actionDone();
+			if (state.removeCube()) state.actionDone();
 		}
 		return false;
-	}
-	
-	//Remove a cube from the current location.  If there's not, return false for an error.
-	private static boolean removeCube() {
-		int currentUserLocation = userLocation[currentUser];
-		if (diseaseCubes[currentUserLocation] > 0) 
-			{
-			diseaseCubes[currentUserLocation]--;
-			System.out.println("There are " + diseaseCubes[currentUserLocation] + " left");
-			return true;
-			}
-		else {
-			System.out.println("The space you're on has no disease cubes.");
-			return false;
-		}
 	}
 
 	//The main function of the program.  Enter and exit from here.
 	//It is a simple getInput processInput loop until the game is over.  
 	public static void main(String[] args) {
 		boolean gameDone = false;
-		state = new GameState();
 
 		System.out.println("Hello Pandemic Tester");
-		
+		state = new GameState();
+
 		while (!gameDone) {
 			int userInput = getUserInput();	
 			gameDone = processUserCommand(userInput);
