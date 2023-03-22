@@ -29,7 +29,7 @@ public class pandemic {
 	private static final int PRINT_DISEASES = 7;
 	private static final int REMOVE = 8;
 	public static final int PRINT_CITY_CARDS = 9;
-	public static final int PRINT_MY_CARDS = 9;
+	public static final int PRINT_MY_CARDS = 10;
 	
 	static GameState state; // Will keep track of the Game's State
 	
@@ -133,7 +133,7 @@ public class pandemic {
 		else if (userInput == PRINT_CITY_CARDS)
 			state.printCityCards();
 		else if (userInput == PRINT_MY_CARDS)
-			state.printCityCards();
+			state.printUserCards();
 		else if (userInput == MOVE) {
 			state.moveUser();
 			state.actionDone();

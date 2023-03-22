@@ -11,7 +11,7 @@ public class GameState {
 	//class variables on top
 	private Scanner shellInput = new Scanner(System.in);
 	//Note use a seed (1) for debugging.  
-	private Random randomGenerator = new Random();
+	// private Random randomGenerator = new Random();
 	// private Random randomGenerator = new Random(1);
 	private int numberCities = -1;	
 	private int numberConnections = -1;	
@@ -20,45 +20,36 @@ public class GameState {
 	private int[][] connections; //The connections via offset in the cities array.
 	private int[] userLocation = {0,0};  //These are the users' location that can change.
 	private int currentUser = 0;
-	private Card[] cityCards;	//List of all cities and their colors
-	private int[] infectionCards;	 //List of all Infection cards
+	private Card[] cityCards;	//List of all city cards and their colors
+	private Card[] epidemicCards;	//Epidemic cards
 	private ArrayList<Card> playerDeck;
 	private ArrayList<Card> infectionDeck;
-	private ArrayList<Card> discardPile = new ArrayList<Card>();
+	private ArrayList<Card> playerDiscardPile = new ArrayList<Card>();
+	private ArrayList<Card> infectionDiscardPile = new ArrayList<Card>();
+	private ArrayList<Integer> citiesToIgnore; // Cities to ignore during outbreak
 	
 	static int actionsDone = 0; // Number of actions done in a turn
 
 	//##Change this to your path.##
 	public static final String cityMapFileName= "fullMap.txt";
 	public static final int NUMBER_USERS = 2;
+	public static final int NUMBER_EPIDEMIC_CARDS = 4; // Number of epidemic cards in game
 	public static final String[] userNames = {"Al","Bob"};
-	public static final int MAX_ACTIONS = 5; // Max number of actions
+	public static final int MAX_ACTIONS = 4; // Max number of actions
 	public static final String[] diseaseColors = {"Blue", "Yellow", "Red", "Black"};
-	public static final int NUMBER_OF_CARDS_TO_GIVE = 4; // Cards to give users when starting
+	public static final int NUMBER_OF_CARDS_TO_GIVE = 6 - NUMBER_USERS; // Cards to give users when starting
 	
-	public static User[] users;
-
-
-	//The constants for the commands.
-	public static final int QUIT = 0;
-	public static final int PRINT_LOCATION = 1;
-	public static final int MOVE = 2;
-	public static final int PRINT_ACTIONS = 3;
-	public static final int PRINT_CITIES = 4;
-	public static final int PRINT_CONNECTIONS = 5;
-	public static final int PRINT_ADJACENT_CITIES = 6;
-	public static final int PRINT_DISEASES = 7;
-	public static final int REMOVE = 8;
+	public User[] users;
 	
 	GameState () {
 		readCityGraph();
-		addPlayerAndInfectionCards();
+		createCityAndEpidemicCards();
 		setPlayerAndInfectionDeck();
 		infectCities();
 		createUsersAndGiveCards();
 	}
 
-	private void createUsersAndGiveCards() {
+	void createUsersAndGiveCards() {
 		users = new User[NUMBER_USERS];
 		for (int user = 0; user < NUMBER_USERS; user++) {
 			ArrayList<Card> playerCards = new ArrayList<Card>();
@@ -174,6 +165,8 @@ public class GameState {
 	void actionDone() {
 		actionsDone++;
 		if (actionsDone >= 4) {
+			blankLine();
+			drawCardsFromInfectionDeck(2);
 			currentUser++;
 			currentUser%=NUMBER_USERS;
 			System.out.println("It's now " + users[currentUser].name + " turn.");	
@@ -207,8 +200,45 @@ public class GameState {
 		blankLine();
 	}
 	
-	void drawCardsFromInfectionDeck() {
+	// Draw infection cards and simulate outbreaks where necessary
+	void drawCardsFromInfectionDeck(int numberToDraw) {
+		System.out.println("Drawing from infection pile");
+		citiesToIgnore = new ArrayList<Integer>();
 
+		for (int number = 0; number < numberToDraw; number++) {
+			Card card = infectionDeck.remove(infectionDeck.size() - 1);
+			System.out.println(" - Card drawn: "+ cities[card.city]);
+			if (diseaseCubes[card.city] == 3) {
+				if (!citiesToIgnore.contains(card.city)) {
+					System.out.println(" - - Outbreak at city");
+					citiesToIgnore.add(card.city);
+					outbreak(card.city);
+				}
+			} else {
+				diseaseCubes[card.city]++;
+				System.out.println(" - Cube added to city");
+			}
+		}
+
+		System.out.println("Drawing complete");
+	}
+
+	// Infect all neighbouring cities
+	void outbreak(int city) {
+		for (int cityNumber = 0; cityNumber < numberCities; cityNumber++) {
+			if (citiesAdjacent(city,cityNumber)) {
+				if (diseaseCubes[cityNumber] == 3) {
+					if (!citiesToIgnore.contains(cityNumber)) {
+						System.out.println(" - - Futher Outbreak at "+ cities[cityNumber]);
+						citiesToIgnore.add(cityNumber);
+						outbreak(cityNumber);
+					} 
+				} else {
+					diseaseCubes[cityNumber]++;
+					System.out.println(" - - Cube added to "+ cities[cityNumber]);
+				}
+			}
+		}
 	}
 
 	//Loop through the city array, and return the offset of the cityName parameter in that
@@ -251,23 +281,29 @@ public class GameState {
 		}
 	}		
 
-	void addPlayerAndInfectionCards () {
+	void createCityAndEpidemicCards () {
 		cityCards = new Card[numberCities];
-		infectionCards = new int[numberCities];
 		int colorCount = 0;
 		for (int cityNumber = 0; cityNumber < numberCities; cityNumber++) {
 			cityCards[cityNumber] = new Card(cityNumber, diseaseColors[colorCount]);
-			infectionCards[cityNumber] = colorCount;
 			colorCount++;
 			if (colorCount >= diseaseColors.length) {
 				colorCount = 0;
 			}
 		}
+		
+		epidemicCards = new Card[NUMBER_EPIDEMIC_CARDS];
+		for (int cards = 0; cards < NUMBER_EPIDEMIC_CARDS; cards++) {
+			epidemicCards[cards] = new Card(Card.EPIDEMIC);
+		}
 	}
 
-	// For now, we set it directly after some shuffling
+	// We set the player deck after combining and shuffling city and epidemic cards
 	void setPlayerAndInfectionDeck () {
-		playerDeck = shuffleCards(cityCards);
+		Card[] combinedCards = new Card[cityCards.length + epidemicCards.length];
+		System.arraycopy(cityCards, 0, combinedCards, 0, cityCards.length);
+		System.arraycopy(epidemicCards, 0, combinedCards, cityCards.length, epidemicCards.length);
+		playerDeck = shuffleCards(combinedCards);
 		infectionDeck = shuffleCards(cityCards);
 	}
 	
@@ -282,12 +318,26 @@ public class GameState {
 		blankLine();
 	}
 			
-	//Print out the full list of connections.
+	//Print out all the cards in the game.
 	void printCityCards( ) {
 		for (int card = 0; card < cityCards.length; card ++) {
 			System.out.println(cities[cityCards[card].city] +": "+ cityCards[card].color);
 		}
 		blankLine();
+	}
+		
+	//Print out the cards currently with users.
+	void printUserCards( ) {
+		blankLine();
+		for (int userNumber = 0; userNumber<NUMBER_USERS;userNumber++) {
+			User user = users[userNumber];
+			System.out.println(user.name +" has "+ user.cards.size() +" cards.");
+	
+			for (Card card: user.cards) {
+				System.out.println(cities[card.city] +": "+ card.color);
+			}
+			blankLine();
+		}
 	}
 
 	//Open the city file, allocate the space for the cities, and connections, then read the 
@@ -301,13 +351,13 @@ public class GameState {
 
 		      //read the number of cities and allocate variables.
 		      numberCities = mapFileReader.nextInt();
-		      String data = mapFileReader.nextLine();  //read the rest of the line after the int
+		      mapFileReader.nextLine();  //read the rest of the line after the int
 		      cities = new String[numberCities]; //allocate the cities array
 		      diseaseCubes = new int[numberCities];
 		      
 		      //tead the number of connections and allocate variables.
 		      numberConnections = mapFileReader.nextInt();
-		      data = mapFileReader.nextLine();  //read the rest of the line after the int
+		      mapFileReader.nextLine();  //read the rest of the line after the int
 		      connections = new int[2][numberConnections];
 
 		      //read cities
@@ -338,7 +388,7 @@ public class GameState {
 				diseaseCubes[card.city] = 1;
 			}
 
-			discardPile.add(card);
+			infectionDiscardPile.add(card);
 		}
 	}
 
