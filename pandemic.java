@@ -30,6 +30,8 @@ public class pandemic {
 	private static final int REMOVE = 8;
 	public static final int PRINT_CITY_CARDS = 9;
 	public static final int PRINT_MY_CARDS = 10;
+	public static final int CURE_DISEASE = 11;
+	public static final int DRAW_CARD = 11;
 	
 	static GameState state; // Will keep track of the Game's State
 	
@@ -53,10 +55,14 @@ public class pandemic {
 			return MOVE;
 		else if (inputString.compareTo("remove") == 0)
 			return REMOVE;
+		else if (inputString.compareTo("cure") == 0)
+			return CURE_DISEASE;
 		else if (inputString.compareTo("city_cards") == 0)
 			return PRINT_CITY_CARDS;
 		else if (inputString.compareTo("my_cards") == 0)
 			return PRINT_MY_CARDS;
+		else if (inputString.compareTo("draw_card") == 0)
+			return DRAW_CARD;
 		else if ((inputString.compareTo("actions") == 0) ||
 				 (inputString.compareTo("help") == 0))
 			return PRINT_ACTIONS;
@@ -106,8 +112,10 @@ public class pandemic {
 		System.out.println ("infections");
 		System.out.println ("move");
 		System.out.println ("remove");		
+		System.out.println ("cure");		
 		System.out.println ("player_cards");		
 		System.out.println ("my_cards");		
+		System.out.println ("draw_card");		
 		System.out.println ("actions");
 		System.out.println("");
 	}
@@ -138,8 +146,15 @@ public class pandemic {
 			state.moveUser();
 			state.actionDone();
 		}
+		else if (userInput == DRAW_CARD) {
+			state.drawPlayerCard();
+			state.actionDone();
+		}
 		else if (userInput == REMOVE) {
 			if (state.removeCube()) state.actionDone();
+		}
+		else if (userInput == CURE_DISEASE) {
+			if (state.cureDisease()) state.actionDone();
 		}
 		return false;
 	}
