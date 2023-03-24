@@ -33,6 +33,8 @@ public class pandemic {
 	public static final int CURE_DISEASE = 11;
 	public static final int DRAW_CARD = 12;
 	public static final int TAKE_CARD = 13;
+	public static final int GIVE_CARD = 14;
+	public static final int PRINT_RESEARCH_STATIONS = 15;
 	
 	static GameState state; // Will keep track of the Game's State
 	
@@ -52,20 +54,24 @@ public class pandemic {
 			return PRINT_ADJACENT_CITIES;
 		else if (inputString.compareTo("infections") == 0)
 			return PRINT_DISEASES;
+		else if (inputString.compareTo("stations") == 0)
+			return PRINT_RESEARCH_STATIONS;
+		else if (inputString.compareTo("city_cards") == 0)
+			return PRINT_CITY_CARDS;
+		else if (inputString.compareTo("my_cards") == 0)
+			return PRINT_MY_CARDS;
 		else if (inputString.compareTo("move") == 0)
 			return MOVE;
 		else if (inputString.compareTo("remove") == 0)
 			return REMOVE;
 		else if (inputString.compareTo("cure") == 0)
 			return CURE_DISEASE;
-		else if (inputString.compareTo("city_cards") == 0)
-			return PRINT_CITY_CARDS;
-		else if (inputString.compareTo("my_cards") == 0)
-			return PRINT_MY_CARDS;
 		else if (inputString.compareTo("draw_card") == 0)
 			return DRAW_CARD;
 		else if (inputString.compareTo("take_card") == 0)
 			return TAKE_CARD;
+		else if (inputString.compareTo("give_card") == 0)
+			return GIVE_CARD;
 		else if ((inputString.compareTo("actions") == 0) ||
 				 (inputString.compareTo("help") == 0))
 			return PRINT_ACTIONS;
@@ -113,13 +119,15 @@ public class pandemic {
 		System.out.println ("connections");
 		System.out.println ("adjacent");
 		System.out.println ("infections");
+		System.out.println ("stations");
+		System.out.println ("city_cards");		
+		System.out.println ("my_cards");		
 		System.out.println ("move");
 		System.out.println ("remove");		
 		System.out.println ("cure");		
-		System.out.println ("player_cards");		
-		System.out.println ("my_cards");		
 		System.out.println ("draw_card");		
 		System.out.println ("take_card");		
+		System.out.println ("give_card");		
 		System.out.println ("actions");
 		System.out.println("");
 	}
@@ -140,6 +148,8 @@ public class pandemic {
 			state.printAdjacentCities();
 		else if (userInput == PRINT_DISEASES)
 			state.printInfectedCities();
+		else if (userInput == PRINT_RESEARCH_STATIONS)
+			state.printResearchStations();
 		else if (userInput == PRINT_ACTIONS) {
 			printActions();
 			state.printNumberOfActionsLeft();
@@ -161,6 +171,9 @@ public class pandemic {
 		}
 		else if (userInput == TAKE_CARD) {
 			if (state.takeCard()) state.actionDone();
+		}
+		else if (userInput == GIVE_CARD) {
+			if (state.giveCard()) state.actionDone();
 		}
 		else if (userInput == CURE_DISEASE) {
 			if (state.cureDisease()) state.actionDone();

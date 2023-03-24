@@ -40,9 +40,12 @@ public class GameState {
 	public static final String[] diseaseColors = {"Blue", "Yellow", "Red", "Black"};
 	public static final int NUMBER_OF_CARDS_TO_GIVE = 6 - NUMBER_USERS; // Cards to give users when starting
 	
-	private boolean[] curedDiseases = new boolean[diseaseColors.length];
+	private boolean[] curedDiseases = new boolean[diseaseColors.length]; // Tracks all diseases status
+	private boolean[] eradicatedDiseases = new boolean[diseaseColors.length]; // Diseases that are cured and can no longer spawn
 	public User[] users;
 	
+	//Constructor
+	//Initializes the board and prepares the game
 	GameState () {
 		readCityGraph();
 		createCityAndEpidemicCards();
@@ -160,9 +163,9 @@ public class GameState {
 	}
 
 	boolean takeCard() {
-		// Show all cards currently with users
-		// printUserCards();
-
+		if (users[currentUser].cards.size() >= 7) {
+			System.out.println("User cannot have more than 7 cards at hand");
+		}
 		// Identify users in current location
 		ArrayList<Integer> usersInLocation = new ArrayList<Integer>();
 		for (int userNumber = 0; userNumber<NUMBER_USERS;userNumber++) {
@@ -236,13 +239,92 @@ public class GameState {
 		}
 	}
 
+	boolean giveCard() {
+		if (users[currentUser].cards.size() == 0) {
+			System.out.println("User doesn't have a card at hand");
+		}
+
+		// Identify users in current location
+		ArrayList<Integer> usersInLocation = new ArrayList<Integer>();
+		for (int userNumber = 0; userNumber<NUMBER_USERS;userNumber++) {
+			if (users[userNumber].location == users[currentUser].location) {
+				if (userNumber == currentUser) {
+				} else {
+					usersInLocation.add(userNumber);
+				}
+			}
+		}
+
+		// No users in current location
+		if (usersInLocation.size() == 0) {
+			System.out.println("There are no users currently in your location");
+			return false;
+		} else {
+			// Display users in current location
+			boolean hasMaxCards = false;
+			for (int userNumber: usersInLocation) {
+				System.out.println(users[userNumber].name +" is currently in your location");
+				// Make sure the user has cards
+				if (users[userNumber].cards.size() >= 7) {
+					hasMaxCards = true;
+				}
+			}
+
+			// Users in location don't have cards ****************************** fix this
+			// if (!hasMaxCards) {
+			// 	System.out.println("User(s) in current location have no cards");
+			// 	return false;
+			// }
+
+			// Select user to give card
+			boolean userFound = false;
+			int userIndex = -1;
+			while (!userFound) {
+				System.out.println("Enter the name of user to give card");
+				String userInput = shellInput.nextLine();
+				userIndex = searchUserName(userInput);
+			
+				if (userIndex == -1) {
+					System.out.println(userInput + " is not a valid User.");
+				} else {
+					userFound = true;
+				}
+				blankLine();
+			}
+
+			boolean found = false;
+			int cardIndex = -1;
+			while (!found) {
+				// Select card to give by entering city name
+				System.out.println("Enter the name of the city on the card to give");
+				String userInput = shellInput.nextLine();
+				cardIndex = searchUserCards(currentUser, userInput);
+			
+				if (cardIndex == -1) {
+					System.out.println(userInput + " is not a valid City. Valid options are as follows");
+					printUserCards(currentUser);
+				} else {
+					found = true;
+				}
+			}
+
+			// give card
+			Card card = users[currentUser].cards.remove(cardIndex);
+			users[userIndex].cards.add(card);
+
+			System.out.println("Card given successfully");
+			return true;
+		}
+	}
+
 	//Remove a cube from the current location.  If there's none, return false for an error.
 	boolean removeCube() {
-		int currentUserLocation = userLocation[currentUser];
+		int currentUserLocation = users[currentUser].location;
 		if (diseaseCubes[currentUserLocation] > 0) {
-			if (curedDiseases[currentUserLocation]) {
+			int colorIndex = searchColorIndex(searchCityCard(currentUserLocation).color);
+			if (curedDiseases[colorIndex]) {
 				diseaseCubes[currentUserLocation] = 0;
-				System.out.println("All cubes removed from location");
+				System.out.println("Cured disease found. All cubes removed from location");
 			} else {
 				diseaseCubes[currentUserLocation]--;
 				System.out.println("There are " + diseaseCubes[currentUserLocation] + " left");
@@ -256,7 +338,7 @@ public class GameState {
 	
 	void actionDone() {
 		actionsDone++;
-		if (actionsDone >= 4) {
+		if (actionsDone >= 1) {
 			blankLine();
 			drawCardsFromInfectionDeck(2);
 			currentUser++;
@@ -292,6 +374,18 @@ public class GameState {
 		return -1;
 	}
 
+	// Search for color index, given the color name
+	int searchColorIndex(String name) {
+		for (int color = 0; color < diseaseColors.length; color++) {
+			if (diseaseColors[color].compareTo(name) == 0) {
+				return color;
+			}
+		}
+
+		return -1;
+	}
+
+	// Search for a user card, given the city and user
 	int searchUserCards(int userIndex, String city) {
 		User user = users[userIndex];
 		for (int cards = 0; cards<user.cards.size();cards++) {
@@ -302,6 +396,16 @@ public class GameState {
 
 		return -1;
 	}
+	
+	Card searchCityCard(int cityNumber) {
+		for (int card = 0; card < cityCards.length; card ++) {
+			if (cityCards[card].city == cityNumber) {
+				return cityCards[card];
+			}
+		}
+		return null;
+	}
+
 	// Draw infection cards and simulate outbreaks where necessary
 	void drawCardsFromInfectionDeck(int numberToDraw) {
 		System.out.println("Drawing from infection pile");
@@ -384,8 +488,7 @@ public class GameState {
 		}
 		return new ArrayList<Card>(Arrays.asList(array));
 	}
-	
-	
+		
 	/**********************************SETUP GAME FUNCTIONS***************************************/
 
 	//Open the city file, allocate the space for the cities, and connections, then read the 
@@ -511,13 +614,13 @@ public class GameState {
 		
 	}
 
-
-	/************************************PRINT FUNCTIONS***************************************/
+	/**************************************PRINT FUNCTIONS***************************************/
 	
 	void printNumberOfActionsLeft() {
 		System.out.println("The current user is " + users[currentUser].name);
-		System.out.println("They have  " + actionsDone +" action(s) left for their turn");
+		System.out.println("They have " + (MAX_ACTIONS - actionsDone) +" action(s) left for their turn");
 	}
+	
 	void printResearchStations() {
 		System.out.println("The current user is " + users[currentUser].name);
 		for (int cityNumber = 0;  cityNumber < numberCities; cityNumber ++) {
@@ -543,7 +646,7 @@ public class GameState {
 		System.out.println("The current user is " + users[currentUser].name);
 		for (int cityNumber = 0;  cityNumber < numberCities; cityNumber ++) {
 			if (diseaseCubes[cityNumber] > 0) {
-				System.out.println(cities[cityNumber] + " has " + diseaseCubes[cityNumber] + " cubes.");
+				System.out.println(cities[cityNumber] + " ("+ cityCards[cityNumber].color +") has " + diseaseCubes[cityNumber] + " cubes.");
 			}
 		}
 		blankLine();
