@@ -51,7 +51,7 @@ public class GameState {
 		createUsersAndGiveCards();
 	}
 
-	/*** Action Functions ***/
+	/************************************ Action Functions ******************************/
 	//Ask the user where to move, get the city, and if valid, move the user's location.
 	void moveUser() {
 		boolean moved = false;
@@ -100,6 +100,7 @@ public class GameState {
 			return false;
 		}
 		
+		// Group user cards by their colors
 		int[] colors = new int[diseaseColors.length];
 		for (int cards = 0; cards < users[currentUser].cards.size(); cards++) {
 			Card card = users[currentUser].cards.get(cards);
@@ -110,17 +111,28 @@ public class GameState {
 			}
 		}
 		
+		// check if user has cards at threshold
 		boolean found = false;
 		for (int color = 0; color < colors.length; color++) {
 			if (colors[color] >= 5) {
 				found = true;
+				// Identify the cards to remove
+				ArrayList<Card> cardsToRemove = new ArrayList<Card>(); 
 				for (int cards = 0; cards < users[currentUser].cards.size(); cards++) {
 					Card card = users[currentUser].cards.get(cards);
 					if (card.color == diseaseColors[color]) {
-						users[currentUser].cards.remove(cards);
-						playerDiscardPile.add(card);
+						cardsToRemove.add(card);
 					}
 				}
+
+				// Now remove the cards after identifing them
+				for (int cards = 0; cards < cardsToRemove.size(); cards++) {
+					Card card = cardsToRemove.get(cards);
+					users[currentUser].cards.remove(card);
+					playerDiscardPile.add(card);
+				}
+
+				// disease color is now cured
 				curedDiseases[color] = true;
 				System.out.println(diseaseColors[color] +" is now cured. Congratulations");
 			}
@@ -146,7 +158,84 @@ public class GameState {
 			return false;
 		}
 	}
-	
+
+	boolean takeCard() {
+		// Show all cards currently with users
+		// printUserCards();
+
+		// Identify users in current location
+		ArrayList<Integer> usersInLocation = new ArrayList<Integer>();
+		for (int userNumber = 0; userNumber<NUMBER_USERS;userNumber++) {
+			if (users[userNumber].location == users[currentUser].location) {
+				if (userNumber == currentUser) {
+				} else {
+					usersInLocation.add(userNumber);
+				}
+			}
+		}
+
+		// No users in current location
+		if (usersInLocation.size() == 0) {
+			System.out.println("There are no users currently in your location");
+			return false;
+		} else {
+			// Display users in current location
+			boolean hasCard = false;
+			for (int userNumber: usersInLocation) {
+				System.out.println(users[userNumber].name +" is currently in your location");
+				// Make sure the user has cards
+				if (users[userNumber].cards.size() > 0) {
+					hasCard = true;
+				}
+			}
+
+			// Users in location don't have cards
+			if (!hasCard) {
+				System.out.println("User(s) in current location have no cards");
+				return false;
+			}
+
+			// Select user to collect card from
+			boolean userFound = false;
+			int userIndex = -1;
+			while (!userFound) {
+				System.out.println("Enter the name of user to collect card from");
+				String userInput = shellInput.nextLine();
+				userIndex = searchUserName(userInput);
+			
+				if (userIndex == -1) {
+					System.out.println(userInput + " is not a valid User.");
+				} else {
+					userFound = true;
+				}
+				blankLine();
+			}
+
+			boolean found = false;
+			int cardIndex = -1;
+			while (!found) {
+				// Select card to take by entering city name
+				System.out.println("Enter the name of the city on the card to collect");
+				String userInput = shellInput.nextLine();
+				cardIndex = searchUserCards(userIndex, userInput);
+			
+				if (cardIndex == -1) {
+					System.out.println(userInput + " is not a valid City. Valid options are as follows");
+					printUserCards(userIndex);
+				} else {
+					found = true;
+				}
+			}
+
+			// take card
+			Card card = users[userIndex].cards.remove(cardIndex);
+			users[currentUser].cards.add(card);
+
+			System.out.println("Card taken successfully");
+			return true;
+		}
+	}
+
 	//Remove a cube from the current location.  If there's none, return false for an error.
 	boolean removeCube() {
 		int currentUserLocation = userLocation[currentUser];
@@ -173,6 +262,7 @@ public class GameState {
 			currentUser++;
 			currentUser%=NUMBER_USERS;
 			System.out.println("It's now " + users[currentUser].name + " turn.");	
+			actionsDone = 0;
 		} else {
 			System.out.println("Action completed. You now have "+ (MAX_ACTIONS - actionsDone) +" actions left.");
 		}
@@ -186,6 +276,32 @@ public class GameState {
 		System.out.println("");
 	}
 		
+	// Searches for the names of other users
+	int searchUserName(String name) {
+		for (int userNumber = 0; userNumber<NUMBER_USERS;userNumber++) {
+			if (users[userNumber].name.compareTo(name) == 0) {
+				// Futher checking, might be redundant
+				if (userNumber == currentUser) {
+					return -1;
+				} else {
+					return userNumber;
+				}
+			}
+		}
+
+		return -1;
+	}
+
+	int searchUserCards(int userIndex, String city) {
+		User user = users[userIndex];
+		for (int cards = 0; cards<user.cards.size();cards++) {
+			if (cities[user.cards.get(cards).city].compareTo(city) == 0) {
+				return cards;
+			}
+		}
+
+		return -1;
+	}
 	// Draw infection cards and simulate outbreaks where necessary
 	void drawCardsFromInfectionDeck(int numberToDraw) {
 		System.out.println("Drawing from infection pile");
@@ -202,8 +318,9 @@ public class GameState {
 				}
 			} else {
 				diseaseCubes[card.city]++;
-				System.out.println(" - Cube added to city");
+				System.out.println(" - Cube added");
 			}
+			infectionDiscardPile.add(card);
 		}
 
 		System.out.println("Drawing complete");
@@ -384,7 +501,7 @@ public class GameState {
 			for (int cards = 0; cards < NUMBER_OF_CARDS_TO_GIVE; cards++) {
 				Card card = playerDeck.remove(playerDeck.size() - 1);
 				if (card.type == Card.EPIDEMIC) {
-					System.out.println("Epidemic card drawn for "+ users[user].name);
+					System.out.println("Epidemic card drawn for "+ userNames[user]);
 				} else {
 					playerCards.add(card);
 				}
@@ -397,7 +514,12 @@ public class GameState {
 
 	/************************************PRINT FUNCTIONS***************************************/
 	
+	void printNumberOfActionsLeft() {
+		System.out.println("The current user is " + users[currentUser].name);
+		System.out.println("They have  " + actionsDone +" action(s) left for their turn");
+	}
 	void printResearchStations() {
+		System.out.println("The current user is " + users[currentUser].name);
 		for (int cityNumber = 0;  cityNumber < numberCities; cityNumber ++) {
 			if (researchStations[cityNumber]) {
 				System.out.println(cities[cityNumber]);
@@ -408,6 +530,7 @@ public class GameState {
 	
 	//Print out the cities adjacent to the userLocation
 	void printAdjacentCities () {
+		System.out.println("The current user is " + users[currentUser].name);
 		for (int cityNumber = 0; cityNumber < numberCities; cityNumber++) {
 			if (citiesAdjacent(users[currentUser].location,cityNumber)) {
 				System.out.println(cities[cityNumber]);
@@ -417,6 +540,7 @@ public class GameState {
 	}
 	
 	void printInfectedCities() {
+		System.out.println("The current user is " + users[currentUser].name);
 		for (int cityNumber = 0;  cityNumber < numberCities; cityNumber ++) {
 			if (diseaseCubes[cityNumber] > 0) {
 				System.out.println(cities[cityNumber] + " has " + diseaseCubes[cityNumber] + " cubes.");
@@ -449,6 +573,7 @@ public class GameState {
 			
 	//Print out all the cards in the game.
 	void printCityCards() {
+		System.out.println("The current user is " + users[currentUser].name);
 		for (int card = 0; card < cityCards.length; card ++) {
 			System.out.println(cities[cityCards[card].city] +": "+ cityCards[card].color);
 		}
@@ -457,6 +582,7 @@ public class GameState {
 		
 	//Print out the cards currently with users.
 	void printUserCards() {
+		System.out.println("The current user is " + users[currentUser].name);
 		blankLine();
 		for (int userNumber = 0; userNumber<NUMBER_USERS;userNumber++) {
 			User user = users[userNumber];
@@ -467,6 +593,15 @@ public class GameState {
 			}
 			blankLine();
 		}
+	}
+	
+	//Print out the cards of a selected user.
+	void printUserCards(int user) {
+		blankLine();
+		for (Card card: users[user].cards) {
+			System.out.println(cities[card.city] +": "+ card.color);
+		}
+		blankLine();
 	}
 
 	//Print out the list of all the cities.
