@@ -35,6 +35,7 @@ public class pandemic {
 	public static final int TAKE_CARD = 13;
 	public static final int GIVE_CARD = 14;
 	public static final int PRINT_RESEARCH_STATIONS = 15;
+	public static final int CREATE_STATION = 16;
 	
 	static GameState state; // Will keep track of the Game's State
 	
@@ -72,6 +73,8 @@ public class pandemic {
 			return TAKE_CARD;
 		else if (inputString.compareTo("give_card") == 0)
 			return GIVE_CARD;
+		else if (inputString.compareTo("create_station") == 0)
+			return CREATE_STATION;
 		else if ((inputString.compareTo("actions") == 0) ||
 				 (inputString.compareTo("help") == 0))
 			return PRINT_ACTIONS;
@@ -100,7 +103,7 @@ public class pandemic {
 			if (processedUserInput >= 0)
 				gotReasonableInput = true;
 			else
-				System.out.println(userInput + "is not a good command. Try 'actions'. \n");				
+				System.out.println(userInput + " is not a good command. Try 'actions'. \n");				
 		}		
 		return processedUserInput;
 	}
@@ -128,6 +131,7 @@ public class pandemic {
 		System.out.println ("draw_card");		
 		System.out.println ("take_card");		
 		System.out.println ("give_card");		
+		System.out.println ("create_station");		
 		System.out.println ("actions");
 		System.out.println("");
 	}
@@ -174,6 +178,9 @@ public class pandemic {
 		}
 		else if (userInput == GIVE_CARD) {
 			if (state.giveCard()) state.actionDone();
+		}
+		else if (userInput == CREATE_STATION) {
+			if (state.createStation()) state.actionDone();
 		}
 		else if (userInput == CURE_DISEASE) {
 			if (state.cureDisease()) state.actionDone();

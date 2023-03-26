@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;  // Import this class to handle errors
 import java.util.Scanner; // Import the Scanner class to read text files
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 
 public class GameState {
@@ -18,9 +19,10 @@ public class GameState {
 	private String[] cities; //Cities
 	private int[] diseaseCubes; //Number of disease cubes in the associated city.
 	private int[][] connections; //The connections via offset in the cities array.
-	private int[] userLocation = {0,0};  //These are the users' location that can change.
 	private boolean[] researchStations; // true/false Research station in the associated city
 	private int currentUser = 0;
+	private int infectionRate = 0; // Current rate of infection
+	private int numberOfOutbreaks = 0;
 	private Card[] cityCards;	//List of all city cards and their colors
 	private Card[] epidemicCards;	//Epidemic cards
 	private ArrayList<Card> playerDeck;
@@ -35,9 +37,11 @@ public class GameState {
 	public static final String cityMapFileName= "fullMap.txt";
 	public static final int NUMBER_USERS = 2;
 	public static final int NUMBER_EPIDEMIC_CARDS = 4; // Number of epidemic cards in game
+	public static final int MAX_NUMBER_OF_OUTBREAKS = 8; // Max number of outbreaks before the game ends
 	public static final String[] userNames = {"Al","Bob"};
 	public static final int MAX_ACTIONS = 4; // Max number of actions
 	public static final String[] diseaseColors = {"Blue", "Yellow", "Red", "Black"};
+	public static final int[] infectionRates = {2, 2, 2, 3, 3, 4, 4}; // Tracks the number of infection cards to be drawn
 	public static final int NUMBER_OF_CARDS_TO_GIVE = 6 - NUMBER_USERS; // Cards to give users when starting
 	
 	private boolean[] curedDiseases = new boolean[diseaseColors.length]; // Tracks all diseases status
@@ -86,17 +90,19 @@ public class GameState {
 		
 	}
 	
+	// Draw from player deck and give user
 	void drawPlayerCard() {
 		Card card = playerDeck.remove(playerDeck.size() - 1);
 		if (card.type == Card.EPIDEMIC) {
-			System.out.println("Epidemic card drawn by "+ users[currentUser].name);
+			epidemicCardDrawn(card, -1);
 		} else {
 			users[currentUser].cards.add(card);
-			System.out.println("Card drawn;");
+			System.out.print("Card drawn; ");
 			System.out.println(cities[card.city] +": "+ card.color);
 		}
 	}
 
+	// Cure disease if criteria is satisfied
 	boolean cureDisease() {
 		if (!researchStations[users[currentUser].location]) {
 			System.out.println("You are not at a research station");
@@ -123,7 +129,7 @@ public class GameState {
 				ArrayList<Card> cardsToRemove = new ArrayList<Card>(); 
 				for (int cards = 0; cards < users[currentUser].cards.size(); cards++) {
 					Card card = users[currentUser].cards.get(cards);
-					if (card.color == diseaseColors[color]) {
+					if (card.color.compareTo(diseaseColors[color]) == 0) {
 						cardsToRemove.add(card);
 					}
 				}
@@ -135,33 +141,26 @@ public class GameState {
 					playerDiscardPile.add(card);
 				}
 
-				// disease color is now cured
+				// disease is now cured
 				curedDiseases[color] = true;
-				System.out.println(diseaseColors[color] +" is now cured. Congratulations");
+				System.out.println(diseaseColors[color] +" is now cured");
+
+				checkIfDiseaseIsEradicated(color);
 			}
 		}
 
 		if (found) {
-			boolean allCured = true;
-			for (int color = 0; color < curedDiseases.length; color++) {
-				if (!curedDiseases[color]) {
-					allCured = false;
-				}
+			if (checkIfAllDiseasesAreCured()) {
+				// ------------------------end the game
 			}
-
-			if (allCured) {
-				// --------------- all diseases cured-------------- end the game
-				System.out.println("All diseases cured");
-				return false;
-			} else {
-				return true;
-			}
+			return true; 
 		} else {
 			System.out.println("You do not have 5 cards of the same color");
 			return false;
 		}
 	}
 
+	// Take a card from a user
 	boolean takeCard() {
 		if (users[currentUser].cards.size() >= 7) {
 			System.out.println("User cannot have more than 7 cards at hand");
@@ -239,6 +238,7 @@ public class GameState {
 		}
 	}
 
+	// Give your card to a user
 	boolean giveCard() {
 		if (users[currentUser].cards.size() == 0) {
 			System.out.println("User doesn't have a card at hand");
@@ -327,7 +327,7 @@ public class GameState {
 				System.out.println("Cured disease found. All cubes removed from location");
 			} else {
 				diseaseCubes[currentUserLocation]--;
-				System.out.println("There are " + diseaseCubes[currentUserLocation] + " left");
+				System.out.println("There are " + diseaseCubes[currentUserLocation] + "cubes left at location");
 			}
 			return true;
 		} else {
@@ -336,23 +336,60 @@ public class GameState {
 		}
 	}
 	
+	boolean createStation() {
+		User user = users[currentUser];
+		for (Card card: user.cards) {
+			if (card.city == user.location) {
+				if (researchStations[user.location]) {
+					System.out.println("A research station already exists at your location");
+					return false;
+				} else {
+					users[currentUser].cards.remove(card);
+					researchStations[user.location] = true;
+					System.out.println("Research station built at "+ cities[user.location]);
+					return true;
+				}
+			}
+		}
+
+		System.out.println("You don't have a card of your current location");
+		return false;
+	}
+	
+	// After an action is done, update action counter and change current user where necessary
 	void actionDone() {
 		actionsDone++;
-		if (actionsDone >= 1) {
+		if (actionsDone >= 4) {
 			blankLine();
-			drawCardsFromInfectionDeck(2);
+			System.out.println("All actions completed");
+			drawPlayerCard();
+			drawPlayerCard();
+			drawCardsFromInfectionDeck(infectionRates[infectionRate], 1);
 			currentUser++;
 			currentUser%=NUMBER_USERS;
 			System.out.println("It's now " + users[currentUser].name + " turn.");	
 			actionsDone = 0;
 		} else {
-			System.out.println("Action completed. You now have "+ (MAX_ACTIONS - actionsDone) +" actions left.");
+			System.out.println("You now have "+ (MAX_ACTIONS - actionsDone) +" actions left.");
 		}
 		blankLine();
 	}
 	
-	
 	/***********************************HELPER FUNCTIONS***************************************/
+	void epidemicCardDrawn(Card card, int userIndex) {
+		System.out.println("Epidemic card drawn by "+ users[(userIndex > -1) ? userIndex: currentUser].name);
+		playerDiscardPile.add(card);
+		if (infectionRate < infectionRates.length - 1) {
+			infectionRate++;
+		}
+		
+		drawCardsFromInfectionDeck(1, 3);
+		Collections.shuffle(infectionDiscardPile);
+		infectionDeck.addAll(infectionDiscardPile);
+		infectionDiscardPile = new ArrayList<Card>();
+		System.out.println("Epidemic Simulation Complete");
+	}
+	
 	// Prints a blank like to the console
 	void blankLine() {
 		System.out.println("");
@@ -397,6 +434,7 @@ public class GameState {
 		return -1;
 	}
 	
+	// Search for a city card, given the city's offset.
 	Card searchCityCard(int cityNumber) {
 		for (int card = 0; card < cityCards.length; card ++) {
 			if (cityCards[card].city == cityNumber) {
@@ -406,32 +444,84 @@ public class GameState {
 		return null;
 	}
 
+	// Check if no cubes of the disease exist on map
+	boolean checkIfDiseaseIsEradicated(int colorIndex) {
+		boolean eradicated = true;
+		for (int cityNumber = 0;  cityNumber < numberCities; cityNumber ++) {
+			if (diseaseCubes[cityNumber] > 0) {
+				if (cityCards[cityNumber].color.compareTo(diseaseColors[colorIndex]) == 0) {
+					eradicated = false;
+				}
+			}
+		}
+
+		if (eradicated) {
+			System.out.println("No more disease cubes of color in game. It's now eradicated");
+			eradicatedDiseases[colorIndex] = true;
+			return true;
+		}
+
+		return false;
+	}
+	
+	// Check if all diseases are cured.
+	boolean checkIfAllDiseasesAreCured() {
+		boolean allCured = true;
+		for (int color = 0; color < curedDiseases.length; color++) {
+			if (!curedDiseases[color]) {
+				allCured = false;
+			}
+		}
+
+		if (allCured) {
+			// --------------- all diseases cured-------------- end the game
+			System.out.println("All diseases cured");
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	// Draw infection cards and simulate outbreaks where necessary
-	void drawCardsFromInfectionDeck(int numberToDraw) {
-		System.out.println("Drawing from infection pile");
+	void drawCardsFromInfectionDeck(int numberOfCardsToDraw, int numberOfCubesToDraw) {
+		System.out.println("Drawing from infection deck");
 		citiesToIgnore = new ArrayList<Integer>();
 
-		for (int number = 0; number < numberToDraw; number++) {
+		for (int number = 0; number < numberOfCardsToDraw; number++) {
 			Card card = infectionDeck.remove(infectionDeck.size() - 1);
 			System.out.println(" - Card drawn: "+ cities[card.city]);
-			if (diseaseCubes[card.city] == 3) {
-				if (!citiesToIgnore.contains(card.city)) {
-					System.out.println(" - - Outbreak at city");
-					citiesToIgnore.add(card.city);
-					outbreak(card.city);
-				}
+			if (eradicatedDiseases[searchColorIndex(card.color)]) {
+				System.out.println(" - Disease already eradicated, no cubes are added");
 			} else {
-				diseaseCubes[card.city]++;
-				System.out.println(" - Cube added");
+				while (numberOfCubesToDraw > 0) {
+					if (diseaseCubes[card.city] == 3) {
+						if (!citiesToIgnore.contains(card.city)) {
+							System.out.println(" - - Outbreak at city");
+							citiesToIgnore.add(card.city);
+							outbreak(card.city);
+						} else {
+							System.out.println("-analytics- city already infected");
+						}
+					} else {
+						diseaseCubes[card.city]++;
+						System.out.println(" - Cube added");
+					}
+					numberOfCubesToDraw--;
+				}
 			}
 			infectionDiscardPile.add(card);
 		}
 
 		System.out.println("Drawing complete");
+		if (numberOfOutbreaks >= MAX_NUMBER_OF_OUTBREAKS) {
+			System.out.println("Maximum number of outbreaks reached. Game over");
+			/**************************************Game over, Do somthing! ***********************************/
+		}
 	}
 
 	// Infect all neighbouring cities
 	void outbreak(int city) {
+		numberOfOutbreaks++;
 		for (int cityNumber = 0; cityNumber < numberCities; cityNumber++) {
 			if (citiesAdjacent(city,cityNumber)) {
 				if (diseaseCubes[cityNumber] == 3) {
@@ -473,6 +563,7 @@ public class GameState {
 		return false;
 	}
 
+	// Shuffle given cards, of type array
 	ArrayList<Card> shuffleCards(Card[] array) {
 		int index;
 		Random random = new Random();
@@ -601,15 +692,20 @@ public class GameState {
 		users = new User[NUMBER_USERS];
 		for (int user = 0; user < NUMBER_USERS; user++) {
 			ArrayList<Card> playerCards = new ArrayList<Card>();
+			Card epidemicDrawn = new Card("");
+			boolean cardDrawn = false;
 			for (int cards = 0; cards < NUMBER_OF_CARDS_TO_GIVE; cards++) {
 				Card card = playerDeck.remove(playerDeck.size() - 1);
 				if (card.type == Card.EPIDEMIC) {
-					System.out.println("Epidemic card drawn for "+ userNames[user]);
+					cardDrawn = true;
+					epidemicDrawn = card;
 				} else {
 					playerCards.add(card);
 				}
 			}
 			users[user] = new User(userNames[user], User.userRoles[user], 0, playerCards);
+			if (cardDrawn)
+				epidemicCardDrawn(epidemicDrawn, user);
 		}
 		
 	}
