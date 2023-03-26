@@ -11,7 +11,7 @@ public class Card {
   
 
   Card (int city, String color) {
-    type = "city";
+    type = CITY;
     this.city = city;
     this.color = color;
   }

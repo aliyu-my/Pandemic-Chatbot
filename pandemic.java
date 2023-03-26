@@ -36,6 +36,8 @@ public class pandemic {
 	public static final int GIVE_CARD = 14;
 	public static final int PRINT_RESEARCH_STATIONS = 15;
 	public static final int CREATE_STATION = 16;
+	public static final int PRINT_CURED_DISEASES = 17;
+	public static final int PRINT_ERADICATED_DISEASES = 18;
 	
 	static GameState state; // Will keep track of the Game's State
 	
@@ -55,6 +57,10 @@ public class pandemic {
 			return PRINT_ADJACENT_CITIES;
 		else if (inputString.compareTo("infections") == 0)
 			return PRINT_DISEASES;
+		else if (inputString.compareTo("cured_diseases") == 0)
+			return PRINT_CURED_DISEASES;
+		else if (inputString.compareTo("eradicated_diseases") == 0)
+			return PRINT_ERADICATED_DISEASES;
 		else if (inputString.compareTo("stations") == 0)
 			return PRINT_RESEARCH_STATIONS;
 		else if (inputString.compareTo("city_cards") == 0)
@@ -73,7 +79,7 @@ public class pandemic {
 			return TAKE_CARD;
 		else if (inputString.compareTo("give_card") == 0)
 			return GIVE_CARD;
-		else if (inputString.compareTo("create_station") == 0)
+		else if (inputString.compareTo("build_station") == 0)
 			return CREATE_STATION;
 		else if ((inputString.compareTo("actions") == 0) ||
 				 (inputString.compareTo("help") == 0))
@@ -122,6 +128,8 @@ public class pandemic {
 		System.out.println ("connections");
 		System.out.println ("adjacent");
 		System.out.println ("infections");
+		System.out.println ("cured_diseases");
+		System.out.println ("eradicated_diseases");
 		System.out.println ("stations");
 		System.out.println ("city_cards");		
 		System.out.println ("my_cards");		
@@ -131,7 +139,7 @@ public class pandemic {
 		System.out.println ("draw_card");		
 		System.out.println ("take_card");		
 		System.out.println ("give_card");		
-		System.out.println ("create_station");		
+		System.out.println ("build_station");		
 		System.out.println ("actions");
 		System.out.println("");
 	}
@@ -152,6 +160,10 @@ public class pandemic {
 			state.printAdjacentCities();
 		else if (userInput == PRINT_DISEASES)
 			state.printInfectedCities();
+		else if (userInput == PRINT_CURED_DISEASES)
+			state.printCuredDiseases();
+		else if (userInput == PRINT_ERADICATED_DISEASES)
+			state.printEradicatedDiseases();
 		else if (userInput == PRINT_RESEARCH_STATIONS)
 			state.printResearchStations();
 		else if (userInput == PRINT_ACTIONS) {
@@ -193,7 +205,7 @@ public class pandemic {
 	public static void main(String[] args) {
 		boolean gameDone = false;
 
-		System.out.println("Hello Pandemic Tester");
+		System.out.println("Hello Pandemic Gamer");
 		state = new GameState();
 
 		while (!gameDone) {
@@ -201,6 +213,6 @@ public class pandemic {
 			gameDone = processUserCommand(userInput);
 		}
 		
-		System.out.println("Goodbye Pandemic Tester");
+		System.out.println("Goodbye Pandemic Gamer");
 	}
 }
