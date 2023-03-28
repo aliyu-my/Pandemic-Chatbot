@@ -8,9 +8,12 @@ public class User {
 
   public static final String GENERALIST = "GENERALIST";
   public static final String SCIENTIST = "SCIENTIST";
+  public static final String MEDIC = "MEDIC";
+  public static final String PILOT = "PILOT";
+  // public static final String SCIENTIST = "SCIENTIST";
 
   public static final String[] userRoles = {
-    GENERALIST, SCIENTIST
+    GENERALIST, SCIENTIST, MEDIC, PILOT
   };
 
   User (String name, String type, int location, ArrayList<Card> cards) {

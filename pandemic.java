@@ -38,6 +38,7 @@ public class pandemic {
 	public static final int CREATE_STATION = 16;
 	public static final int PRINT_CURED_DISEASES = 17;
 	public static final int PRINT_ERADICATED_DISEASES = 18;
+	public static final int PRINT_OUTBREAKS = 19;
 	
 	static GameState state; // Will keep track of the Game's State
 	
@@ -63,6 +64,8 @@ public class pandemic {
 			return PRINT_ERADICATED_DISEASES;
 		else if (inputString.compareTo("stations") == 0)
 			return PRINT_RESEARCH_STATIONS;
+		else if (inputString.compareTo("outbreaks") == 0)
+			return PRINT_OUTBREAKS;
 		else if (inputString.compareTo("city_cards") == 0)
 			return PRINT_CITY_CARDS;
 		else if (inputString.compareTo("my_cards") == 0)
@@ -131,6 +134,7 @@ public class pandemic {
 		System.out.println ("cured_diseases");
 		System.out.println ("eradicated_diseases");
 		System.out.println ("stations");
+		System.out.println ("outbreaks");
 		System.out.println ("city_cards");		
 		System.out.println ("my_cards");		
 		System.out.println ("move");
@@ -166,6 +170,8 @@ public class pandemic {
 			state.printEradicatedDiseases();
 		else if (userInput == PRINT_RESEARCH_STATIONS)
 			state.printResearchStations();
+		else if (userInput == PRINT_OUTBREAKS)
+			state.printOutbreaks();
 		else if (userInput == PRINT_ACTIONS) {
 			printActions();
 			state.printNumberOfActionsLeft();
@@ -201,7 +207,6 @@ public class pandemic {
 	}
 
 	//The main function of the program.  Enter and exit from here.
-	//It is a simple getInput processInput loop until the game is over.  
 	public static void main(String[] args) {
 		boolean gameDone = false;
 

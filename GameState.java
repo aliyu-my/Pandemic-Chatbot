@@ -30,12 +30,13 @@ public class GameState {
 	private ArrayList<Card> playerDiscardPile = new ArrayList<Card>();
 	private ArrayList<Card> infectionDiscardPile = new ArrayList<Card>();
 	private ArrayList<Integer> citiesToIgnore; // Cities to ignore during outbreak
+	private int number_of_users;
+	private int number_of_cards_to_give; // Cards to give users when starting
 	
 	static int actionsDone = 0; // Number of actions done in a turn
 
 	//##Change this to your path.##
 	public static final String cityMapFileName= "fullMap.txt";
-	public static final int NUMBER_USERS = 2;
 	public static final int NUMBER_EPIDEMIC_CARDS = 4; // Number of epidemic cards in game
 	public static final int MAX_NUMBER_OF_CARDS_IN_HAND = 7; // Number of epidemic cards in game
 	public static final int MAX_NUMBER_OF_OUTBREAKS = 8; // Max number of outbreaks before the game ends
@@ -43,7 +44,6 @@ public class GameState {
 	public static final int MAX_ACTIONS = 4; // Max number of actions
 	public static final String[] diseaseColors = {"Blue", "Yellow", "Red", "Black"};
 	public static final int[] infectionRates = {2, 2, 2, 3, 3, 4, 4}; // Tracks the number of infection cards to be drawn
-	public static final int NUMBER_OF_CARDS_TO_GIVE = 6 - NUMBER_USERS; // Cards to give users when starting
 	
 	private boolean[] curedDiseases = new boolean[diseaseColors.length]; // Tracks all diseases status
 	private boolean[] eradicatedDiseases = new boolean[diseaseColors.length]; // Diseases that are cured and can no longer spawn
@@ -57,6 +57,8 @@ public class GameState {
 		setPlayerAndInfectionDeck();
 		infectCities();
 		createUsersAndGiveCards();
+		System.out.println("Enter a commend: ");
+		blankLine();
 	}
 
 	/************************************ Action Functions ******************************/
@@ -204,7 +206,7 @@ public class GameState {
 		}
 		// Identify users in current location
 		ArrayList<Integer> usersInLocation = new ArrayList<Integer>();
-		for (int userNumber = 0; userNumber<NUMBER_USERS;userNumber++) {
+		for (int userNumber = 0; userNumber<number_of_users;userNumber++) {
 			if (users[userNumber].location == users[currentUser].location) {
 				if (userNumber == currentUser) {
 				} else {
@@ -283,7 +285,7 @@ public class GameState {
 
 		// Identify users in current location
 		ArrayList<Integer> usersInLocation = new ArrayList<Integer>();
-		for (int userNumber = 0; userNumber<NUMBER_USERS;userNumber++) {
+		for (int userNumber = 0; userNumber<number_of_users;userNumber++) {
 			if (users[userNumber].location == users[currentUser].location) {
 				if (userNumber == currentUser) {
 				} else {
@@ -373,6 +375,7 @@ public class GameState {
 		}
 	}
 	
+	// Create research station
 	boolean createStation() {
 		User user = users[currentUser];
 		for (Card card: user.cards) {
@@ -393,7 +396,9 @@ public class GameState {
 		return false;
 	}
 	
-	// After an action is done, update action counter and change current user where necessary
+	// After an action is done, update action counter,
+	// draw player and infection cards,
+	// and change current user where necessary
 	void actionDone() {
 		actionsDone++;
 		if (actionsDone >= MAX_ACTIONS) {
@@ -407,7 +412,9 @@ public class GameState {
 			}
 			drawCardsFromInfectionDeck(infectionRates[infectionRate], 1);
 			currentUser++;
-			currentUser%=NUMBER_USERS;
+			if (currentUser >= number_of_users)
+				currentUser = 0;
+				
 			System.out.println("It's now " + users[currentUser].name + " turn.");	
 			actionsDone = 0;
 		} else {
@@ -425,9 +432,13 @@ public class GameState {
 		}
 		
 		drawCardsFromInfectionDeck(1, 3);
+
+		// Might be fishy. Look into this ------------------
 		Collections.shuffle(infectionDiscardPile);
 		infectionDeck.addAll(infectionDiscardPile);
 		infectionDiscardPile = new ArrayList<Card>();
+		// ----------------------------------------------------
+
 		System.out.println("Epidemic Simulation Complete");
 	}
 	
@@ -438,7 +449,7 @@ public class GameState {
 		
 	// Searches for the names of other users
 	int searchUserName(String name) {
-		for (int userNumber = 0; userNumber<NUMBER_USERS;userNumber++) {
+		for (int userNumber = 0; userNumber<number_of_users;userNumber++) {
 			if (users[userNumber].name.compareTo(name) == 0) {
 				// Futher checking, might be redundant
 				if (userNumber == currentUser) {
@@ -545,11 +556,12 @@ public class GameState {
 	}
 	
 	// Draw infection cards and simulate outbreaks where necessary
-	void drawCardsFromInfectionDeck(int numberOfCardsToDraw, int numberOfCubesToDraw) {
+	void drawCardsFromInfectionDeck(int numberOfCardsToDraw, int _numberOfCubesToDraw) {
 		System.out.println("Drawing from infection deck");
 		citiesToIgnore = new ArrayList<Integer>();
 
 		for (int number = 0; number < numberOfCardsToDraw; number++) {
+			int numberOfCubesToDraw = _numberOfCubesToDraw;
 			Card card = infectionDeck.remove(infectionDeck.size() - 1);
 			System.out.println(" - Card drawn: "+ cities[card.city]);
 			if (eradicatedDiseases[searchColorIndex(card.color)]) {
@@ -578,6 +590,7 @@ public class GameState {
 		if (numberOfOutbreaks >= MAX_NUMBER_OF_OUTBREAKS) {
 			System.out.println("Maximum number of outbreaks reached. Game over");
 			/**************************************Game over, Do somthing! ***********************************/
+			System.exit(0);
 		}
 	}
 
@@ -754,13 +767,96 @@ public class GameState {
 		infectionDeck = shuffleCards(cardsToShuffle);
 	}
 	
+	// Create users by collecting their names and roles,
+	// Then intialize their player cards
 	void createUsersAndGiveCards() {
-		users = new User[NUMBER_USERS];
-		for (int user = 0; user < NUMBER_USERS; user++) {
+		boolean done = false;
+		int numberOfUsers = 0;
+
+		while (!done) {
+			System.out.println("Enter how mamy users are playing: ");
+			try {
+				numberOfUsers = Integer.parseInt(shellInput.nextLine());
+				if (numberOfUsers > 4) {
+					System.out.println("You cannot have more than 4 players");
+				} else if (numberOfUsers < 2) {
+					System.out.println("You cannot have less than 2 players");
+				} else {
+					done = true;
+				}
+			} catch (Exception e) {
+				System.out.println("Invalid input");
+			}
+		}
+
+		// update instance variables
+		number_of_users = numberOfUsers;
+		number_of_cards_to_give = 6 - numberOfUsers;
+
+		users = new User[numberOfUsers];
+
+		boolean[] rolesUsed = new boolean[User.userRoles.length]; 
+		for (int userIndex = 0; userIndex < numberOfUsers; userIndex++) {
+			boolean valid = false;
+			String name = "";
+
+			while (!valid) {
+				System.out.println("Please enter the name of user "+ (userIndex + 1) +": ");
+				name = shellInput.nextLine();
+				if (name.trim().length() <= 0) {
+					System.out.println("Invalid name provided");
+				} else {
+					boolean duplicate = false;
+					for (int current = 0; current < userIndex; current++) {
+						if (users[current].name.compareTo(name) == 0) {
+							duplicate = true;
+						}
+					}
+
+					if (duplicate) {
+						System.out.println("A user with the name already exist");
+					} else {
+						valid = true;
+					}
+				}
+			}
+			
+			blankLine();
+			valid = false;
+			String roleSelected = "";
+			while (!valid) {
+				System.out.println("Enter your user role. Valid choices are as follows");
+				for (int role = 0; role < rolesUsed.length; role++) {
+					if (!rolesUsed[role]) {
+						System.out.println(User.userRoles[role]);
+					}
+				}
+				
+				blankLine();
+				roleSelected = shellInput.nextLine();
+				for (int role = 0; role < User.userRoles.length; role++) {
+					if (roleSelected.toUpperCase().compareTo(User.userRoles[role]) == 0) {
+						if (rolesUsed[role]) {
+							System.out.println("This role is already selected");
+						} else {
+							roleSelected = User.userRoles[role];
+							rolesUsed[role] = true;
+							valid = true;
+							break;
+						}
+					}
+				}
+
+				if (!valid) 
+					System.out.println(roleSelected +" is an invalid input");
+			}
+			
+			System.out.println("Drawing "+ number_of_cards_to_give +" player cards");
+
 			ArrayList<Card> playerCards = new ArrayList<Card>();
 			Card epidemicDrawn = new Card("");
 			boolean cardDrawn = false;
-			for (int cards = 0; cards < NUMBER_OF_CARDS_TO_GIVE; cards++) {
+			for (int cards = 0; cards < number_of_cards_to_give; cards++) {
 				Card card = playerDeck.remove(playerDeck.size() - 1);
 				if (card.type == Card.EPIDEMIC) {
 					cardDrawn = true;
@@ -769,11 +865,14 @@ public class GameState {
 					playerCards.add(card);
 				}
 			}
-			users[user] = new User(userNames[user], User.userRoles[user], 0, playerCards);
+
+			users[userIndex] = new User(name, roleSelected, 0, playerCards);
+			
 			if (cardDrawn)
-				epidemicCardDrawn(epidemicDrawn, user);
+				epidemicCardDrawn(epidemicDrawn, userIndex);
 		}
-		
+	
+		System.out.println("Users created successfully");
 	}
 
 	/**************************************PRINT FUNCTIONS***************************************/
@@ -832,7 +931,7 @@ public class GameState {
 	//Print out all the users' locations.
 	void printUserLocations() {
 		System.out.println("The current user is " + users[currentUser].name);
-		for (int userNumber = 0; userNumber<NUMBER_USERS;userNumber++) {
+		for (int userNumber = 0; userNumber<number_of_users;userNumber++) {
 			int printUserLocation = users[userNumber].location;
 			
 			System.out.println (users[userNumber].name + " is in " + cities[printUserLocation]);
@@ -879,7 +978,7 @@ public class GameState {
 	void printUserCards() {
 		System.out.println("The current user is " + users[currentUser].name);
 		blankLine();
-		for (int userNumber = 0; userNumber<NUMBER_USERS;userNumber++) {
+		for (int userNumber = 0; userNumber<number_of_users;userNumber++) {
 			User user = users[userNumber];
 			System.out.println(user.name +" has "+ user.cards.size() +" cards.");
 	
@@ -897,6 +996,10 @@ public class GameState {
 			System.out.println(cities[card.city] +": "+ card.color);
 		}
 		blankLine();
+	}
+
+	void printOutbreaks() {
+		System.out.println(numberOfOutbreaks +" outbreaks have occured");
 	}
 
 	//Print out the list of all the cities.
