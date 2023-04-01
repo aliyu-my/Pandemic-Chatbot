@@ -3,51 +3,49 @@
 import java.io.File;  // Import the File class
 import java.io.FileNotFoundException;  // Import this class to handle errors
 import java.util.Scanner; // Import the Scanner class to read text files
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.ArrayList; // Import ArrayList to handle cards
+import java.util.Arrays; // Import arrays for some Conversion
+import java.util.Collections; // Import Collections for sorting
 import java.util.Random;
 
 public class GameState {
-	//class variables on top
-	private Scanner shellInput = new Scanner(System.in);
+	public Scanner shellInput = new Scanner(System.in);
 	//Note use a seed (1) for debugging.  
-	// private Random randomGenerator = new Random();
-	// private Random randomGenerator = new Random(1);
-	private int numberCities = -1;	
-	private int numberConnections = -1;	
-	private String[] cities; //Cities
-	private int[] diseaseCubes; //Number of disease cubes in the associated city.
-	private int[][] connections; //The connections via offset in the cities array.
-	private boolean[] researchStations; // true/false Research station in the associated city
-	private int currentUser = 0;
-	private int infectionRate = 0; // Current rate of infection
-	private int numberOfOutbreaks = 0;
-	private Card[] cityCards;	//List of all city cards and their colors
-	private Card[] epidemicCards;	//Epidemic cards
-	private ArrayList<Card> playerDeck;
-	private ArrayList<Card> infectionDeck;
-	private ArrayList<Card> playerDiscardPile = new ArrayList<Card>();
-	private ArrayList<Card> infectionDiscardPile = new ArrayList<Card>();
-	private ArrayList<Integer> citiesToIgnore; // Cities to ignore during outbreak
-	private int number_of_users;
-	private int number_of_cards_to_give; // Cards to give users when starting
+	// public Random randomGenerator = new Random();
+	// public Random randomGenerator = new Random(1);
+	public int numberCities = -1;	
+	public int numberConnections = -1;	
+	public String[] cities; //Cities
+	public int[] diseaseCubes; //Number of disease cubes in the associated city.
+	public int[][] connections; //The connections via offset in the cities array.
+	public boolean[] researchStations; // true/false Research station in the associated city
+	public int currentUser = 0; // The current user taking actions
+	public int infectionRate = 0; // Current rate of infection
+	public int numberOfOutbreaks = 0; // The total number of outbreaks that have occured
+	public Card[] cityCards;	//List of all city cards and their colors
+	public Card[] epidemicCards;	// List of Epidemic cards in game
+	public ArrayList<Card> playerDeck; // The current player deck
+	public ArrayList<Card> infectionDeck; // The current Infection deck
+	public ArrayList<Card> playerDiscardPile = new ArrayList<Card>(); // The player discard pile
+	public ArrayList<Card> infectionDiscardPile = new ArrayList<Card>(); // The infection discard pile
+	public ArrayList<Integer> citiesToIgnore; // Cities to ignore during outbreak
+	public int number_of_users; // Number of users in game
+	public int number_of_cards_to_give; // Cards to give users when starting
 	
-	static int actionsDone = 0; // Number of actions done in a turn
+	public static int actionsDone = 0; // Number of actions done in a turn
 
-	//##Change this to your path.##
-	public static final String cityMapFileName= "fullMap.txt";
+	public static final String cityMapFileName= "fullMap.txt"; // Directory of city/connections file
 	public static final int NUMBER_EPIDEMIC_CARDS = 4; // Number of epidemic cards in game
 	public static final int MAX_NUMBER_OF_CARDS_IN_HAND = 7; // Number of epidemic cards in game
 	public static final int MAX_NUMBER_OF_OUTBREAKS = 8; // Max number of outbreaks before the game ends
-	public static final String[] userNames = {"Al","Bob"};
-	public static final int MAX_ACTIONS = 4; // Max number of actions
-	public static final String[] diseaseColors = {"Blue", "Yellow", "Red", "Black"};
+	public static final int MAX_ACTIONS = 4; // Max number of actions (excluding some user roles)
+	public static final String[] diseaseColors = {"Blue", "Yellow", "Red", "Black"}; // The diesease colors
 	public static final int[] infectionRates = {2, 2, 2, 3, 3, 4, 4}; // Tracks the number of infection cards to be drawn
+	public static final int CARDS_TO_CURE_DISEASE = 5; // Number of cards of the same color required to cure a disease
 	
-	private boolean[] curedDiseases = new boolean[diseaseColors.length]; // Tracks all diseases status
-	private boolean[] eradicatedDiseases = new boolean[diseaseColors.length]; // Diseases that are cured and can no longer spawn
-	public User[] users;
+	public boolean[] curedDiseases = new boolean[diseaseColors.length]; // Tracks all diseases that have been cured
+	public boolean[] eradicatedDiseases = new boolean[diseaseColors.length]; // Diseases that are cured and can no longer spawn
+	public User[] users; // Tracks all users in game, including their location and cards in hand
 	
 	//Constructor
 	//Initializes the board and prepares the game
@@ -57,8 +55,6 @@ public class GameState {
 		setPlayerAndInfectionDeck();
 		infectCities();
 		createUsersAndGiveCards();
-		System.out.println("Enter a commend: ");
-		blankLine();
 	}
 
 	/************************************ Action Functions ******************************/
@@ -77,6 +73,14 @@ public class GameState {
 			//If adjacent move the user
 			else if (citiesAdjacent(users[currentUser].location,cityToMoveTo)) {
 				System.out.println("The user has moved from " +
+					cities[users[currentUser].location] + " to " + 
+					cities[cityToMoveTo] + ".");
+				users[currentUser].location = cityToMoveTo;
+				moved = true;
+			}
+			// If user is a pilot, they can travel anywhere
+			else if (users[currentUser].type == User.PILOT) {
+				System.out.println("Pilot user has moved from " +
 					cities[users[currentUser].location] + " to " + 
 					cities[cityToMoveTo] + ".");
 				users[currentUser].location = cityToMoveTo;
@@ -164,7 +168,11 @@ public class GameState {
 		// check if user has cards at threshold
 		boolean found = false;
 		for (int color = 0; color < colors.length; color++) {
-			if (colors[color] >= 5) {
+			// Check if user is a scientist and reduce the number of cards required for cure
+			int numberOfCardsRequired = CARDS_TO_CURE_DISEASE - 
+				(users[currentUser].type == User.SCIENTIST ? 1: 0);
+
+			if (colors[color] >= numberOfCardsRequired) {
 				found = true;
 				// Identify the cards to remove
 				ArrayList<Card> cardsToRemove = new ArrayList<Card>(); 
@@ -210,7 +218,10 @@ public class GameState {
 			if (users[userNumber].location == users[currentUser].location) {
 				if (userNumber == currentUser) {
 				} else {
-					usersInLocation.add(userNumber);
+					// Make sure the user has cards
+					if (users[userNumber].cards.size() > 0) {
+						usersInLocation.add(userNumber);
+					}
 				}
 			}
 		}
@@ -224,10 +235,6 @@ public class GameState {
 			boolean hasCard = false;
 			for (int userNumber: usersInLocation) {
 				System.out.println(users[userNumber].name +" is currently in your location");
-				// Make sure the user has cards
-				if (users[userNumber].cards.size() > 0) {
-					hasCard = true;
-				}
 			}
 
 			// Users in location don't have cards
@@ -281,6 +288,7 @@ public class GameState {
 	boolean giveCard() {
 		if (users[currentUser].cards.size() == 0) {
 			System.out.println("User doesn't have a card at hand");
+			return false;
 		}
 
 		// Identify users in current location
@@ -289,7 +297,10 @@ public class GameState {
 			if (users[userNumber].location == users[currentUser].location) {
 				if (userNumber == currentUser) {
 				} else {
-					usersInLocation.add(userNumber);
+					// Check if user has cards
+					if (users[userNumber].cards.size() > 0) {
+						usersInLocation.add(userNumber);
+					}
 				}
 			}
 		}
@@ -300,13 +311,8 @@ public class GameState {
 			return false;
 		} else {
 			// Display users in current location
-			boolean hasMaxCards = false;
 			for (int userNumber: usersInLocation) {
 				System.out.println(users[userNumber].name +" is currently in your location");
-				// Make sure the user has cards
-				if (users[userNumber].cards.size() >= 7) {
-					hasMaxCards = true;
-				}
 			}
 
 			// Users in location don't have cards ****************************** fix this
@@ -365,8 +371,13 @@ public class GameState {
 				diseaseCubes[currentUserLocation] = 0;
 				System.out.println("Cured disease found. All cubes removed from location");
 			} else {
-				diseaseCubes[currentUserLocation]--;
-				System.out.println("There are " + diseaseCubes[currentUserLocation] + " cubes left at location");
+				if (users[currentUser].type == User.MEDIC) {
+					diseaseCubes[currentUserLocation] = 0;
+					System.out.println("All cubes removed by Medic user");
+				} else {
+					diseaseCubes[currentUserLocation]--;
+					System.out.println("There are " + diseaseCubes[currentUserLocation] + " cubes left at location");
+				}
 			}
 			return true;
 		} else {
@@ -401,7 +412,7 @@ public class GameState {
 	// and change current user where necessary
 	void actionDone() {
 		actionsDone++;
-		if (actionsDone >= MAX_ACTIONS) {
+		if (actionsDone >= getUserMaxActions()) {
 			blankLine();
 			System.out.println("All actions completed");
 			System.out.println("Drawing player cards...");
@@ -418,7 +429,7 @@ public class GameState {
 			System.out.println("It's now " + users[currentUser].name + " turn.");	
 			actionsDone = 0;
 		} else {
-			System.out.println("You now have "+ (MAX_ACTIONS - actionsDone) +" actions left.");
+			System.out.println("You now have "+ (getUserMaxActions() - actionsDone) +" actions left.");
 		}
 		blankLine();
 	}
@@ -434,9 +445,14 @@ public class GameState {
 		drawCardsFromInfectionDeck(1, 3);
 
 		// Might be fishy. Look into this ------------------
+		System.out.println("Cards in infection discard pile:");
+		for (Card cards: infectionDiscardPile) {
+			System.out.println(cities[cards.city] +": "+ cards.color);
+		}
 		Collections.shuffle(infectionDiscardPile);
 		infectionDeck.addAll(infectionDiscardPile);
 		infectionDiscardPile = new ArrayList<Card>();
+		System.out.println("Cards in infection discard pile added to top of infection deck:");
 		// ----------------------------------------------------
 
 		System.out.println("Epidemic Simulation Complete");
@@ -755,6 +771,15 @@ public class GameState {
 		}
 	}
 
+	// Get the max number of actions for user (checks user role)
+	int getUserMaxActions () {
+		if (users[currentUser].type == User.GENERALIST) {
+			return (MAX_ACTIONS + 1);
+		}
+
+		return MAX_ACTIONS;
+	}
+	
 	// We set the player deck after combining and shuffling city and epidemic cards
 	void setPlayerAndInfectionDeck () {
 		Card[] combinedCards = new Card[cityCards.length + epidemicCards.length];
@@ -879,7 +904,7 @@ public class GameState {
 	
 	void printNumberOfActionsLeft() {
 		System.out.println("The current user is " + users[currentUser].name);
-		System.out.println("They have " + (MAX_ACTIONS - actionsDone) +" action(s) left for their turn");
+		System.out.println("They have " + (getUserMaxActions() - actionsDone) +" action(s) left for their turn");
 	}
 	
 	void printEradicatedDiseases() {
