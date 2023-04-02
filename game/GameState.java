@@ -1,3 +1,4 @@
+package game;
 
 //Note: you need to import scanner to use it to read from the screen.
 import java.io.File;  // Import the File class
@@ -48,18 +49,20 @@ public class GameState {
 	public User[] users; // Tracks all users in game, including their location and cards in hand
 	
 	//Constructor
-	//Initializes the board and prepares the game
 	GameState () {
+	}
+
+	//Initializes the board and prepares a new game
+	void initializeGame() {
 		readCityGraph();
 		createCityAndEpidemicCards();
 		setPlayerAndInfectionDeck();
 		infectCities();
 		createUsersAndGiveCards();
 	}
-
 	
 	/***********************************HELPER FUNCTIONS***************************************/
-	void epidemicCardDrawn(Card card, int userIndex) {
+	public void epidemicCardDrawn(Card card, int userIndex) {
 		System.out.println("Epidemic card drawn by "+ users[(userIndex > -1) ? userIndex: currentUser].name);
 		playerDiscardPile.add(card);
 		if (infectionRate < infectionRates.length - 1) {
@@ -83,12 +86,12 @@ public class GameState {
 	}
 	
 	// Prints a blank like to the console
-	void blankLine() {
+	public void blankLine() {
 		System.out.println("");
 	}
 		
 	// Searches for the names of other users
-	int searchUserName(String name) {
+	public int searchUserName(String name) {
 		for (int userNumber = 0; userNumber<number_of_users;userNumber++) {
 			if (users[userNumber].name.compareTo(name) == 0) {
 				// Futher checking, might be redundant
@@ -104,7 +107,7 @@ public class GameState {
 	}
 
 	// Search for color index, given the color name
-	int searchColorIndex(String name) {
+	public int searchColorIndex(String name) {
 		for (int color = 0; color < diseaseColors.length; color++) {
 			if (diseaseColors[color].compareTo(name) == 0) {
 				return color;
@@ -115,7 +118,7 @@ public class GameState {
 	}
 
 	// Discard card in hand down to 7
-	void discardPlayerCard() {
+	public void discardPlayerCard() {
 		System.out.println("Max number of cards in hand reached for "+ users[currentUser].name);
 		while (users[currentUser].cards.size() > MAX_NUMBER_OF_CARDS_IN_HAND) {
 			System.out.println("Current number of cards in hand: "+ users[currentUser].cards.size());
@@ -134,7 +137,7 @@ public class GameState {
 	}
 
 	// Search for a user card, given the city and user
-	int searchUserCards(int userIndex, String city) {
+	public int searchUserCards(int userIndex, String city) {
 		User user = users[userIndex];
 		for (int cards = 0; cards<user.cards.size();cards++) {
 			if (cities[user.cards.get(cards).city].compareTo(city) == 0) {
@@ -146,7 +149,7 @@ public class GameState {
 	}
 	
 	// Search for a city card, given the city's offset.
-	Card searchCityCard(int cityNumber) {
+	public Card searchCityCard(int cityNumber) {
 		for (int card = 0; card < cityCards.length; card ++) {
 			if (cityCards[card].city == cityNumber) {
 				return cityCards[card];
@@ -156,7 +159,7 @@ public class GameState {
 	}
 
 	// Check if no cubes of the disease exist on map
-	boolean checkIfDiseaseIsEradicated(int colorIndex) {
+	public boolean checkIfDiseaseIsEradicated(int colorIndex) {
 		boolean eradicated = true;
 		for (int cityNumber = 0;  cityNumber < numberCities; cityNumber ++) {
 			if (diseaseCubes[cityNumber] > 0) {
@@ -176,7 +179,7 @@ public class GameState {
 	}
 	
 	// Check if all diseases are cured.
-	boolean checkIfAllDiseasesAreCured() {
+	public boolean checkIfAllDiseasesAreCured() {
 		boolean allCured = true;
 		for (int color = 0; color < curedDiseases.length; color++) {
 			if (!curedDiseases[color]) {
@@ -196,7 +199,7 @@ public class GameState {
 	}
 	
 	// Draw infection cards and simulate outbreaks where necessary
-	void drawCardsFromInfectionDeck(int numberOfCardsToDraw, int _numberOfCubesToDraw) {
+	public void drawCardsFromInfectionDeck(int numberOfCardsToDraw, int _numberOfCubesToDraw) {
 		System.out.println("Drawing from infection deck");
 		citiesToIgnore = new ArrayList<Integer>();
 
@@ -235,7 +238,7 @@ public class GameState {
 	}
 
 	// Infect all neighbouring cities
-	void outbreak(int city) {
+	public void outbreak(int city) {
 		numberOfOutbreaks++;
 		for (int cityNumber = 0; cityNumber < numberCities; cityNumber++) {
 			if (citiesAdjacent(city,cityNumber)) {
@@ -255,7 +258,7 @@ public class GameState {
 
 	//Loop through the city array, and return the offset of the cityName parameter in that
 	//array.  Return -1 if the cityName is not in the array.
-	int getCityOffset(String cityName) {
+	public int getCityOffset(String cityName) {
 		for (int cityNumber = 0; cityNumber < numberCities; cityNumber++) {
 			if (cityName.compareTo(cities[cityNumber]) == 0) 
 				return cityNumber;
@@ -265,7 +268,7 @@ public class GameState {
 
 	//Look through the connections and see if the city numbers are in them.  If
 	//Return whether they are in the list.
-	boolean citiesAdjacent(int city1,int city2) {
+	public boolean citiesAdjacent(int city1,int city2) {
 		for (int compareConnection = 0; compareConnection < numberConnections; compareConnection ++) {
 			if ((connections[0][compareConnection] == city1) &&
 				(connections[1][compareConnection] == city2))
@@ -279,7 +282,7 @@ public class GameState {
 	}
 
 	// Shuffle given cards
-	ArrayList<Card> shuffleCards(Card[] array) {
+	public ArrayList<Card> shuffleCards(Card[] array) {
 		int index;
 		Random random = new Random();
 		for (int i = array.length - 1; i > 0; i--)
@@ -299,7 +302,7 @@ public class GameState {
 
 	//Open the city file, allocate the space for the cities, and connections, then read the 
 	//cities, and then read the connections.  It uses those class variables.
-	void readCityGraph() {
+	public void readCityGraph() {
 
 		//Open the file and read it.  
 		try {
@@ -335,7 +338,7 @@ public class GameState {
 	
 	/***Code for the city graph ***/
 	//Read the specified number of cities.  If it crashes, it should throw to the calling catch.
-	void readCities(int numCities, Scanner scanner) {
+	public void readCities(int numCities, Scanner scanner) {
 		//A simple loop reading cities in.  It assumes the file is text with the last character 
 		//of the line being the last letter of the city name.
 		for (int cityNumber = 0; cityNumber < numCities; cityNumber++) {
@@ -346,7 +349,7 @@ public class GameState {
 
 	// Initial infection
 	// first 3 cities get 3 cubes each, next 3 get 2 cubes each, final 3 get 1 cube each
-	void infectCities() {
+	public void infectCities() {
 		System.out.println("Drawing infection cards...");
 		for (int cards = 0; cards < 9; cards++) {
 			// Get the card on top
@@ -364,7 +367,7 @@ public class GameState {
 	}
 
 	//Read the specified number of connections.  If it crashes, it should throw to the calling catch.
-	void readConnections(int numConnections, Scanner scanner) {
+	public void readConnections(int numConnections, Scanner scanner) {
 		//A simple loop reading connections in.  It assumes the file is text with the last 
 		//character of the line being the last letter of the city name.  The two 
 		//cities are separated by a ; with no spaces
@@ -378,7 +381,7 @@ public class GameState {
 		}
 	}		
 
-	void createCityAndEpidemicCards () {
+	public void createCityAndEpidemicCards () {
 		cityCards = new Card[numberCities];
 		int colorCount = 0;
 		for (int cityNumber = 0; cityNumber < numberCities; cityNumber++) {
@@ -396,8 +399,8 @@ public class GameState {
 	}
 
 	// Get the max number of actions for user (checks user role)
-	int getUserMaxActions () {
-		if (users[currentUser].type == User.GENERALIST) {
+	public int getUserMaxActions () {
+		if (users[currentUser].role == User.GENERALIST) {
 			return (MAX_ACTIONS + 1);
 		}
 
@@ -405,7 +408,7 @@ public class GameState {
 	}
 	
 	// We set the player deck after combining and shuffling city and epidemic cards
-	void setPlayerAndInfectionDeck () {
+	public void setPlayerAndInfectionDeck () {
 		Card[] combinedCards = new Card[cityCards.length + epidemicCards.length];
 		System.arraycopy(cityCards, 0, combinedCards, 0, cityCards.length);
 		System.arraycopy(epidemicCards, 0, combinedCards, cityCards.length, epidemicCards.length);
@@ -418,7 +421,7 @@ public class GameState {
 	
 	// Create users by collecting their names and roles,
 	// Then intialize their player cards
-	void createUsersAndGiveCards() {
+	public void createUsersAndGiveCards() {
 		boolean done = false;
 		int numberOfUsers = 0;
 
@@ -515,7 +518,7 @@ public class GameState {
 				}
 			}
 
-			users[userIndex] = new User(name, roleSelected, 0, playerCards);
+			users[userIndex] = new User(name, roleSelected, User.PLAYER, 0, playerCards);
 			
 			if (cardDrawn)
 				epidemicCardDrawn(epidemicDrawn, userIndex);
@@ -526,12 +529,12 @@ public class GameState {
 
 	/**************************************PRINT FUNCTIONS***************************************/
 	
-	void printNumberOfActionsLeft() {
+	public void printNumberOfActionsLeft() {
 		System.out.println("The current user is " + users[currentUser].name);
 		System.out.println("They have " + (getUserMaxActions() - actionsDone) +" action(s) left for their turn");
 	}
 	
-	void printEradicatedDiseases() {
+	public void printEradicatedDiseases() {
 		boolean notFound = true;
 		for (int cured = 0; cured < eradicatedDiseases.length; cured++) {
 			if (eradicatedDiseases[cured]) {
@@ -546,7 +549,7 @@ public class GameState {
 		blankLine();
 	}
 
-	void printResearchStations() {
+	public void printResearchStations() {
 		System.out.println("The current user is " + users[currentUser].name);
 		for (int cityNumber = 0;  cityNumber < numberCities; cityNumber ++) {
 			if (researchStations[cityNumber]) {
@@ -557,7 +560,7 @@ public class GameState {
 	}
 	
 	//Print out the cities adjacent to the userLocation
-	void printAdjacentCities () {
+	public void printAdjacentCities () {
 		System.out.println("The current user is " + users[currentUser].name);
 		for (int cityNumber = 0; cityNumber < numberCities; cityNumber++) {
 			if (citiesAdjacent(users[currentUser].location,cityNumber)) {
@@ -567,7 +570,7 @@ public class GameState {
 		blankLine();
 	}
 	
-	void printInfectedCities() {
+	public void printInfectedCities() {
 		System.out.println("The current user is " + users[currentUser].name);
 		for (int cityNumber = 0;  cityNumber < numberCities; cityNumber ++) {
 			if (diseaseCubes[cityNumber] > 0) {
@@ -578,7 +581,7 @@ public class GameState {
 	}
 	
 	//Print out all the users' locations.
-	void printUserLocations() {
+	public void printUserLocations() {
 		System.out.println("The current user is " + users[currentUser].name);
 		for (int userNumber = 0; userNumber<number_of_users;userNumber++) {
 			int printUserLocation = users[userNumber].location;
@@ -588,7 +591,7 @@ public class GameState {
 		blankLine();
 	}
 	
-	void printCuredDiseases() {
+	public void printCuredDiseases() {
 		boolean notFound = true;
 		for (int cured = 0; cured < curedDiseases.length; cured++) {
 			if (curedDiseases[cured]) {
@@ -604,7 +607,7 @@ public class GameState {
 	}
 	
 	//Print out the full list of connections.
-	void printConnections() {
+	public void printConnections() {
 		System.out.println(numberConnections + " Connections.");
 		for (int connectionNumber = 0; connectionNumber < numberConnections; connectionNumber++) {
 			String firstCity = cities[connections[0][connectionNumber]];
@@ -615,7 +618,7 @@ public class GameState {
 	}
 			
 	//Print out all the cards in the game.
-	void printCityCards() {
+	public void printCityCards() {
 		System.out.println("The current user is " + users[currentUser].name);
 		for (int card = 0; card < cityCards.length; card ++) {
 			System.out.println(cities[cityCards[card].city] +": "+ cityCards[card].color);
@@ -624,7 +627,7 @@ public class GameState {
 	}
 		
 	//Print out the cards currently with users.
-	void printUserCards() {
+	public void printUserCards() {
 		System.out.println("The current user is " + users[currentUser].name);
 		blankLine();
 		for (int userNumber = 0; userNumber<number_of_users;userNumber++) {
@@ -639,7 +642,7 @@ public class GameState {
 	}
 	
 	//Print out the cards of a selected user.
-	void printUserCards(int user) {
+	public void printUserCards(int user) {
 		blankLine();
 		for (Card card: users[user].cards) {
 			System.out.println(cities[card.city] +": "+ card.color);
@@ -647,12 +650,12 @@ public class GameState {
 		blankLine();
 	}
 
-	void printOutbreaks() {
+	public void printOutbreaks() {
 		System.out.println(numberOfOutbreaks +" outbreaks have occured");
 	}
 
 	//Print out the list of all the cities.
-	void printCities() {
+	public void printCities() {
 		System.out.println(numberCities + " Cities.");
 		for (int cityNumber = 0; cityNumber < numberCities; cityNumber++) {
 			System.out.println(cities[cityNumber]);

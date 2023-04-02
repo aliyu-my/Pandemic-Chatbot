@@ -1,9 +1,14 @@
+package action;
 import java.util.ArrayList;
 
-public class Action {
+import game.Card;
+import game.GameState;
+import game.User;
+
+public class GameActions {
   GameState game;
   
-  Action (GameState game) {
+  public GameActions (GameState game) {
     this.game = game;
   }
 	
@@ -28,7 +33,7 @@ public class Action {
 				moved = true;
 			}
 			// If user is a pilot, they can travel anywhere
-			else if (game.users[game.currentUser].type == User.PILOT) {
+			else if (game.users[game.currentUser].role == User.PILOT) {
 				System.out.println("Pilot user has moved from " +
           game.cities[game.users[game.currentUser].location] + " to " + 
           game.cities[cityToMoveTo] + ".");
@@ -261,7 +266,7 @@ public class Action {
 		for (int color = 0; color < colors.length; color++) {
 			// Check if user is a scientist and reduce the number of cards required for cure
 			int numberOfCardsRequired = GameState.CARDS_TO_CURE_DISEASE - 
-				(game.users[game.currentUser].type == User.SCIENTIST ? 1: 0);
+				(game.users[game.currentUser].role == User.SCIENTIST ? 1: 0);
 
 			if (colors[color] >= numberOfCardsRequired) {
 				found = true;
@@ -307,7 +312,7 @@ public class Action {
 				game.diseaseCubes[currentUserLocation] = 0;
 				System.out.println("Cured disease found. All cubes removed from location");
 			} else {
-				if (game.users[game.currentUser].type == User.MEDIC) {
+				if (game.users[game.currentUser].role == User.MEDIC) {
 					game.diseaseCubes[currentUserLocation] = 0;
 					System.out.println("All cubes removed by Medic user");
 				} else {

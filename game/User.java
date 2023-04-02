@@ -1,10 +1,15 @@
+package game;
 import java.util.ArrayList;
 
 public class User {
-  String name;  // User's name
-  String type; // User's type [Generalist, Scientist...]
-  ArrayList<Card> cards; // User's cards in hand
-  int location; // User's current location
+  public String name;  // User's name
+  public String role; // User's type [Generalist, Scientist...]
+  public ArrayList<Card> cards; // User's cards in hand
+  public int location; // User's current location
+  public String type; // Player or Agent
+
+  public static final String PLAYER = "PLAYER";
+  public static final String AGENT = "AGENT";
 
   // The different user roles that a player can choose
   public static final String GENERALIST = "GENERALIST"; // Can take 5 actions
@@ -18,9 +23,10 @@ public class User {
   };
 
   // Constructer to initialize a user
-  User (String name, String type, int location, ArrayList<Card> cards) {
-    this.type = type;
+  public User (String name, String role, String type, int location, ArrayList<Card> cards) {
+    this.role = role;
     this.name = name;
+    this.type = type;
     this.location = location;
     this.cards = cards;
   }
