@@ -13,7 +13,7 @@ import java.util.Scanner; // Import the Scanner class to read text files
 
 //There's only one class in this program.  All functions are here, and it runs from
 //the main function.
-public class pandemic {
+public class Pandemic {
 	//class variables on top
 	private static Scanner shellInput;    //These two are for the shell scanner.
 	private static boolean shellOpen = false;
@@ -41,6 +41,7 @@ public class pandemic {
 	public static final int PRINT_OUTBREAKS = 19;
 	
 	static GameState state; // Will keep track of the Game's State
+	static Action action;
 	
 	/***Functions for user commands***/
 	//Get the users input and translate it to the constants.  Could do lots more 
@@ -181,27 +182,27 @@ public class pandemic {
 		else if (userInput == PRINT_MY_CARDS)
 			state.printUserCards();
 		else if (userInput == MOVE) {
-			state.moveUser();
-			state.actionDone();
+			action.moveUser();
+			action.actionDone();
 		}
 		else if (userInput == DRAW_CARD) {
-			state.drawPlayerCard();
-			state.actionDone();
+			action.drawPlayerCard();
+			action.actionDone();
 		}
 		else if (userInput == REMOVE) {
-			if (state.removeCube()) state.actionDone();
+			if (action.removeCube()) action.actionDone();
 		}
 		else if (userInput == TAKE_CARD) {
-			if (state.takeCard()) state.actionDone();
+			if (action.takeCard()) action.actionDone();
 		}
 		else if (userInput == GIVE_CARD) {
-			if (state.giveCard()) state.actionDone();
+			if (action.giveCard()) action.actionDone();
 		}
 		else if (userInput == CREATE_STATION) {
-			if (state.createStation()) state.actionDone();
+			if (action.createStation()) action.actionDone();
 		}
 		else if (userInput == CURE_DISEASE) {
-			if (state.cureDisease()) state.actionDone();
+			if (action.cureDisease()) action.actionDone();
 		}
 		return false;
 	}
@@ -212,6 +213,7 @@ public class pandemic {
 
 		System.out.println("Hello Pandemic Gamer");
 		state = new GameState();
+		action = new Action(state);
 
 		while (!gameDone) {
 			int userInput = getUserInput();	
