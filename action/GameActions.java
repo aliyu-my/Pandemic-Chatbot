@@ -196,11 +196,12 @@ public class GameActions {
 		return tryAction(action);
 	}
 	
+	// Pass user turn to the next user
 	public boolean passTurn() {
 		Pass action = new Pass(game);
 		return tryAction(action);
 	}
-	
+
 	// After an action is done, update action counter,
 	// draw player and infection cards,
 	// and change current user where necessary
@@ -219,7 +220,7 @@ public class GameActions {
 			game.drawCardsFromInfectionDeck(GameState.infectionRates[game.infectionRate], 1);
 			game.currentUser++;
 			if (game.currentUser >= game.number_of_users)
-      game.currentUser = 0;
+      	game.currentUser = 0;
 				
 			System.out.println("It's now " + game.users[game.currentUser].name + " turn.");	
 			game.actionsDone = 0;

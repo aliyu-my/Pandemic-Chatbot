@@ -10,7 +10,6 @@ package game;
 
 //Note: you need to import scanner to use it to read from the screen.
 import java.util.Scanner; // Import the Scanner class to read text files
-
 import action.GameActions;
 
 //There's only one class in this program.  All functions are here, and it runs from

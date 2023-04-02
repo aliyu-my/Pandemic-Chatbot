@@ -197,7 +197,13 @@ public class GameState {
 
 		for (int number = 0; number < numberOfCardsToDraw; number++) {
 			int numberOfCubesToDraw = _numberOfCubesToDraw;
-			Card card = infectionDeck.remove(infectionDeck.size() - 1);
+			Card card;
+			if (numberOfCardsToDraw == 3) {
+				card = infectionDeck.remove(0);
+			} else {
+				card = infectionDeck.remove(infectionDeck.size() - 1);
+			}
+				
 			System.out.println(" - Card drawn: "+ cities[card.city]);
 			if (eradicatedDiseases[searchColorIndex(card.color)]) {
 				System.out.println(" - Disease already eradicated, no cubes are added");
