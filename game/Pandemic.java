@@ -41,6 +41,7 @@ public class Pandemic {
 	public static final int PRINT_CURED_DISEASES = 17;
 	public static final int PRINT_ERADICATED_DISEASES = 18;
 	public static final int PRINT_OUTBREAKS = 19;
+	public static final int PASS_TURN = 20;
 	
 	static GameState state; // Will keep track of the Game's State
 	static GameActions gameActions;
@@ -49,6 +50,7 @@ public class Pandemic {
 	//Get the users input and translate it to the constants.  Could do lots more 
 	//error handling here.
 	private static int processUserInput(String inputString) {
+		inputString = inputString.toLowerCase();
 		if (inputString.compareTo("quit") == 0)
 			return QUIT;
 		else if (inputString.compareTo("location") == 0)
@@ -75,6 +77,8 @@ public class Pandemic {
 			return PRINT_MY_CARDS;
 		else if (inputString.compareTo("move") == 0)
 			return MOVE;
+		else if (inputString.compareTo("pass_turn") == 0)
+			return PASS_TURN;
 		else if (inputString.compareTo("remove") == 0)
 			return REMOVE;
 		else if (inputString.compareTo("cure") == 0)
@@ -120,11 +124,6 @@ public class Pandemic {
 		return processedUserInput;
 	}
 
-	//print out the integer associated with what the user typed.
-	private static void echoUserInput(int userInput) {
-		System.out.println("The user chose:"+ userInput);
-	}
-
 	//Print out all possible user actions.
 	private static void printActions() {
 		System.out.println ("Type in on the terminal with the following followed by no spaces finish with return.");
@@ -139,6 +138,7 @@ public class Pandemic {
 		System.out.println ("stations");
 		System.out.println ("outbreaks");
 		System.out.println ("city_cards");		
+		System.out.println ("pass_turn");
 		System.out.println ("my_cards");		
 		System.out.println ("move");
 		System.out.println ("remove");		
@@ -153,8 +153,6 @@ public class Pandemic {
 
 	//Handle the user's commands.
 	private static boolean processUserCommand(int userInput) {
-		echoUserInput(userInput);
-		
 		if (userInput == QUIT) 
 			return true;
 		else if (userInput == PRINT_LOCATION)
@@ -193,6 +191,9 @@ public class Pandemic {
 		}
 		else if (userInput == REMOVE) {
 			if (gameActions.removeCube()) gameActions.actionDone();
+		}
+		else if (userInput == PASS_TURN) {
+			if (gameActions.passTurn()) gameActions.actionDone();
 		}
 		else if (userInput == TAKE_CARD) {
 			if (gameActions.takeCard()) gameActions.actionDone();

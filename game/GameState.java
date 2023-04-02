@@ -71,18 +71,10 @@ public class GameState {
 		
 		drawCardsFromInfectionDeck(1, 3);
 
-		// Might be fishy. Look into this ------------------
-		System.out.println("Cards in infection discard pile:");
-		for (Card cards: infectionDiscardPile) {
-			System.out.println(cities[cards.city] +": "+ cards.color);
-		}
 		Collections.shuffle(infectionDiscardPile);
 		infectionDeck.addAll(infectionDiscardPile);
 		infectionDiscardPile = new ArrayList<Card>();
 		System.out.println("Cards in infection discard pile added to top of infection deck:");
-		// ----------------------------------------------------
-
-		System.out.println("Epidemic Simulation Complete");
 	}
 	
 	// Prints a blank like to the console
