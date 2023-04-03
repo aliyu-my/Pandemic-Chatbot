@@ -8,9 +8,13 @@ package game;
   distribute it beyond CST 3170.
  */
 
+import java.util.Objects;
 //Note: you need to import scanner to use it to read from the screen.
 import java.util.Scanner; // Import the Scanner class to read text files
+
+import action.AbstractAction;
 import action.GameActions;
+import ai.Moves;
 
 //There's only one class in this program.  All functions are here, and it runs from
 //the main function.
@@ -209,7 +213,30 @@ public class Pandemic {
 		return false;
 	}
 
-	//The main function of the program.  Enter and exit from here.
+	public static boolean processAIMove() {
+		boolean done = false;
+		while (!done) {
+			int randomMove = (int) (Math.random() * Moves.allMoves.length);
+			String type = Moves.allMoves[randomMove];
+			System.out.println(type);
+			Moves moves = new Moves(state);
+			AbstractAction action = moves.getMove(type);
+			if (Objects.isNull(action)) {
+			} else {
+				if (action.canPerform()) {
+					if (action.perform()) {
+						gameActions.actionDone();
+						done = true;
+					}
+				}
+			}
+	
+		}
+		
+		return true;
+	}
+
+	//The main function of the program. Enter and exit from here.
 	public static void main(String[] args) {
 		boolean gameDone = false;
 
@@ -219,8 +246,13 @@ public class Pandemic {
 		gameActions = new GameActions(state);
 
 		while (!gameDone) {
-			int userInput = getUserInput();	
-			gameDone = processUserCommand(userInput);
+			if (state.users[state.currentUser].type.compareTo(User.AGENT) == 0) {
+				processAIMove();
+			} else {
+				int userInput = getUserInput();	
+				gameDone = processUserCommand(userInput);
+			}
+
 		}
 		
 		System.out.println("Goodbye Pandemic Gamer");

@@ -15,7 +15,7 @@ public class Pass extends AbstractAction {
 
   public boolean perform() {
     game.actionsDone = game.getUserMaxActions();
-    System.out.println("User has passed their turn");
+    System.out.println(game.users[game.currentUser].name +" has passed their turn");
     return true;
   }
 

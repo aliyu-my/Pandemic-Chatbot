@@ -10,31 +10,36 @@ import java.util.Collections; // Import Collections for sorting
 import java.util.Random;
 
 public class GameState {
-	public Scanner shellInput = new Scanner(System.in);
 	//Note use a seed (1) for debugging.  
 	// public Random randomGenerator = new Random();
 	// public Random randomGenerator = new Random(1);
-	public int numberCities = -1;	
-	public int numberConnections = -1;	
-	public String[] cities; //Cities
-	public int[] diseaseCubes; //Number of disease cubes in the associated city.
-	public int[][] connections; //The connections via offset in the cities array.
-	public boolean[] researchStations; // true/false Research station in the associated city
+
+	// Instance variables
+	public int numberCities = -1;	// number of cities in game
+	public int numberConnections = -1;	// number of connections in game
+	public int number_of_users; // Number of users in game
+	public int number_of_cards_to_give; // Cards to give users when starting
+	public int actionsDone = 0; // Number of actions done in a turn
 	public int currentUser = 0; // The current user taking actions
 	public int infectionRate = 0; // Current rate of infection
 	public int numberOfOutbreaks = 0; // The total number of outbreaks that have occured
+	public int[] diseaseCubes; //Number of disease cubes in the associated city.
+	public int[][] connections; //The connections via offset in the cities array.
 	public Card[] cityCards;	//List of all city cards and their colors
 	public Card[] epidemicCards;	// List of Epidemic cards in game
+	public User[] users; // Tracks all users in game, including their location and cards in hand
+	public String[] cities; // All cities in game, indexed by their offset
+	public boolean[] researchStations; // true/false Research station in the associated city
+	public boolean[] curedDiseases = new boolean[diseaseColors.length]; // Tracks all diseases that have been cured
+	public boolean[] eradicatedDiseases = new boolean[diseaseColors.length]; // Diseases that are cured and can no longer spawn
 	public ArrayList<Card> playerDeck; // The current player deck
 	public ArrayList<Card> infectionDeck; // The current Infection deck
 	public ArrayList<Card> playerDiscardPile = new ArrayList<Card>(); // The player discard pile
 	public ArrayList<Card> infectionDiscardPile = new ArrayList<Card>(); // The infection discard pile
 	public ArrayList<Integer> citiesToIgnore; // Cities to ignore during outbreak
-	public int number_of_users; // Number of users in game
-	public int number_of_cards_to_give; // Cards to give users when starting
-	
-	public int actionsDone = 0; // Number of actions done in a turn
 
+	// Constants
+	public static final Scanner shellInput = new Scanner(System.in);
 	public static final String cityMapFileName= "fullMap.txt"; // Directory of city/connections file
 	public static final int NUMBER_EPIDEMIC_CARDS = 4; // Number of epidemic cards in game
 	public static final int MAX_NUMBER_OF_CARDS_IN_HAND = 7; // Number of epidemic cards in game
@@ -43,10 +48,6 @@ public class GameState {
 	public static final String[] diseaseColors = {"Blue", "Yellow", "Red", "Black"}; // The diesease colors
 	public static final int[] infectionRates = {2, 2, 2, 3, 3, 4, 4}; // Tracks the number of infection cards to be drawn
 	public static final int CARDS_TO_CURE_DISEASE = 5; // Number of cards of the same color required to cure a disease
-	
-	public boolean[] curedDiseases = new boolean[diseaseColors.length]; // Tracks all diseases that have been cured
-	public boolean[] eradicatedDiseases = new boolean[diseaseColors.length]; // Diseases that are cured and can no longer spawn
-	public User[] users; // Tracks all users in game, including their location and cards in hand
 	
 	//Constructor
 	GameState () {
@@ -228,6 +229,7 @@ public class GameState {
 		}
 
 		System.out.println("Drawing complete");
+		System.out.println("Current number of outbreaks: "+ numberOfOutbreaks);
 		if (numberOfOutbreaks >= MAX_NUMBER_OF_OUTBREAKS) {
 			System.out.println("Maximum number of outbreaks reached. Game over");
 			/**************************************Game over, Do somthing! ***********************************/
@@ -379,6 +381,7 @@ public class GameState {
 		}
 	}		
 
+	// Create all city (player and infection) cards and epidemic cards to be used in game
 	public void createCityAndEpidemicCards () {
 		cityCards = new Card[numberCities];
 		int colorCount = 0;
@@ -471,11 +474,27 @@ public class GameState {
 				}
 			}
 			
+			String type = "";
+			valid = false;
+			while (!valid) {
+				System.out.println("Please enter user type (player or agent)");
+				type = shellInput.nextLine();
+				if (type.toUpperCase().compareTo(User.AGENT) == 0) {
+					valid = true;
+					type = User.AGENT;
+				} else if (type.toUpperCase().compareTo(User.PLAYER) == 0) {
+					valid = true;
+					type = User.PLAYER;
+				} else {
+					System.out.println("Invalid input");
+				}
+			}
+			
 			blankLine();
 			valid = false;
 			String roleSelected = "";
 			while (!valid) {
-				System.out.println("Enter your user role. Valid choices are as follows");
+				System.out.println("Enter user role. Valid choices are as follows");
 				for (int role = 0; role < rolesUsed.length; role++) {
 					if (!rolesUsed[role]) {
 						System.out.println(User.userRoles[role]);
@@ -516,7 +535,7 @@ public class GameState {
 				}
 			}
 
-			users[userIndex] = new User(name, roleSelected, User.PLAYER, 0, playerCards);
+			users[userIndex] = new User(name, roleSelected, type, 0, playerCards);
 			
 			if (cardDrawn)
 				epidemicCardDrawn(epidemicDrawn, userIndex);

@@ -70,7 +70,7 @@ public class GameActions {
 			int userIndex = -1;
 			while (!userFound) {
 				System.out.println("Enter the name of user to collect card from");
-				String userInput = game.shellInput.nextLine();
+				String userInput = GameState.shellInput.nextLine();
 				userIndex = game.searchUserName(userInput);
 			
 				if (userIndex == -1) {
@@ -86,7 +86,7 @@ public class GameActions {
 			while (!found) {
 				// Select card to take by entering city name
 				System.out.println("Enter the name of the city on the card to collect");
-				String userInput = game.shellInput.nextLine();
+				String userInput = GameState.shellInput.nextLine();
 				cardIndex = game.searchUserCards(userIndex, userInput);
 			
 				if (cardIndex == -1) {
@@ -142,7 +142,7 @@ public class GameActions {
 			int userIndex = -1;
 			while (!userFound) {
 				System.out.println("Enter the name of user to give card");
-				String userInput = game.shellInput.nextLine();
+				String userInput = GameState.shellInput.nextLine();
 				userIndex = game.searchUserName(userInput);
 			
 				if (userIndex == -1) {
@@ -158,7 +158,7 @@ public class GameActions {
 			while (!found) {
 				// Select card to give by entering city name
 				System.out.println("Enter the name of the city on the card to give");
-				String userInput = game.shellInput.nextLine();
+				String userInput = GameState.shellInput.nextLine();
 				cardIndex = game.searchUserCards(game.currentUser, userInput);
 			
 				if (cardIndex == -1) {

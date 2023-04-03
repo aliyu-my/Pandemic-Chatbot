@@ -1,17 +1,27 @@
 package action;
 
+import java.util.ArrayList;
+
 import game.Card;
 import game.GameState;
 import game.User;
 
-	//Ask the user where to move, get the city, and if valid, move user's location.
+//Ask the user where to move, get the city, and if valid, move user's location.
 public class MoveUser extends AbstractAction {
   GameState game;
+	int city = -1;
   
   public MoveUser (GameState game) {
     this.game = game;
+		int random = (int) (Math.random() * inputOptions().size());
+		this.city = inputOptions().get(random);
   }
 	
+	public MoveUser(GameState game, int city) {
+		this.game = game;
+		this.city = city;
+	}
+
   public boolean canPerform() {
     return true;
   }
@@ -19,10 +29,18 @@ public class MoveUser extends AbstractAction {
   public boolean perform() {
 		boolean moved = false;
 		while (!moved) {
-			System.out.println ("Type where you'd like to move.");
-			String userInput = game.shellInput.nextLine();
-			int cityToMoveTo = game.getCityOffset(userInput);
-		
+			int cityToMoveTo = -1;
+			String userInput = "";
+
+			if (game.users[game.currentUser].type == User.PLAYER) {
+				System.out.println ("Type where you'd like to move.");
+				userInput = GameState.shellInput.nextLine();
+				cityToMoveTo = game.getCityOffset(userInput);
+			} else {
+				cityToMoveTo = city;
+				userInput = game.cities[city];
+			}
+			
 			if (cityToMoveTo == -1) {
 				System.out.println(userInput + " is not a valid city. Try one of these.");
 				game.printAdjacentCities();
@@ -92,4 +110,43 @@ public class MoveUser extends AbstractAction {
     return true;
   }
 
+	public ArrayList<Integer> inputOptions () {
+		ArrayList<Integer> validOptions = new ArrayList<Integer>();
+		User user = game.users[game.currentUser];
+
+		// Pilot user
+		if (user.role == User.PILOT) {	
+			for (int cityNumber = 0; cityNumber < game.numberCities; cityNumber++) {
+				if (user.location != cityNumber) {
+					validOptions.add(cityNumber);
+				}
+			}
+
+			return validOptions;
+		} else {
+			for (int cityNumber = 0; cityNumber < game.numberCities; cityNumber++) {
+				if (user.location == cityNumber) {
+					// Can't travel to current location
+				} 
+				// adjacent cities
+				else if (game.citiesAdjacent(user.location,cityNumber)) {
+					validOptions.add(cityNumber);
+				} 
+				// research station
+				else if (game.researchStations[user.location] && game.researchStations[cityNumber]) {
+					validOptions.add(cityNumber);
+				} 
+				// has card of destination
+				else if (game.searchUserCards(game.currentUser, game.cities[cityNumber]) > -1) {
+					validOptions.add(cityNumber);
+				}
+				// has card of current location
+				else if (game.searchUserCards(game.currentUser, game.cities[user.location]) > -1) {
+					validOptions.add(cityNumber);
+				}
+			}
+
+			return validOptions;
+		}
+	}
 }
